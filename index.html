@@ -1,25 +1,36 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Discount Smokes - Home</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="assets/favicon.svg" />
 </head>
 <body>
-  <!-- header (set active link) -->
-  <!-- replace the header block here with the shared header, setting {homeActive} to 'active' and others '' -->
   <header>
     <div class="container header-inner">
       <div class="brand">
-        <!-- (logo svg from shared header) -->
-        <h1 class="site-title">Discount Smokes</h1>
-      </div>
-      <nav>
-        <a href="index.html" class="active">Home</a>
-        <a href="products.html">Products</a>
-        <a href="deals.html">Deals</a>
-        <a href="contact.html">Contact</a>
-      </nav>
+<svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 360" role="img" aria-label="Discount Smokes logo">
+  <defs><style>.t{font:700 110px Arial, Helvetica, sans-serif}</style></defs>
+  <rect width="1080" height="360" fill="none"/>
+  <text x="40" y="160" class="t" fill="#e63946">DISCOUNT</text>
+  <text x="40" y="270" class="t" fill="#ffffff" fill-opacity="0.9">SMOKES</text>
+  <g transform="translate(740,200)">
+    <rect x="0" y="0" width="300" height="22" rx="11" ry="11" fill="#f4f0e6" stroke="#fff" stroke-width="6"/>
+    <rect x="-84" y="0" width="84" height="22" rx="11" ry="11" fill="#f39c12" stroke="#fff" stroke-width="6"/>
+    <circle cx="300" cy="11" r="14" fill="#fff"/>
+    <circle cx="300" cy="11" r="10" fill="#e63946"/>
+  </g>
+  <path d="M880 50c-8 32 48 35 34 76-11 32-58 24-58 56" fill="none" stroke="#ffffff" stroke-opacity="0.9" stroke-width="14" stroke-linecap="round"/>
+</svg>
+<h1 class="site-title">Discount Smokes</h1></div>
+      
+<nav>
+  <a href="index.html" class="active">Home</a>
+  <a href="contact.html">Contact</a>
+</nav>
+
     </div>
   </header>
 
@@ -33,32 +44,32 @@
   <main class="container">
     <div class="grid grid-2">
       <section class="card">
-        <div class="address">📍 <strong>1130 Westport Rd, Kansas City, MO 64111</strong></div>
-
+        <div class="address"><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="#e63946" d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z"/></svg> <strong>1130 Westport Rd, Kansas City, MO 64111</strong></div>
         <div class="row">
-          <a class="action primary" href="contact.html#form">✉️ Contact Form</a>
-          <a class="action" href="mailto:1130.westport@gmail.com">📧 Email Us</a>
-          <a class="action" href="tel:+18167121130">📞 Call Now</a>
+          <a class="action primary" href="contact.html#form"><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="#111" d="M48 64C21.5 64 0 85.5 0 112v16.2L236.6 310.8c9.4 6.3 21.4 6.3 30.8 0L512 128.2V112c0-26.5-21.5-48-48-48H48zM512 176.4L343.8 296.5 512 408.8V176.4zM486.2 447.5L320 336.9l-48.6 32.4c-9.4 6.3-21.4 6.3-30.8 0L192 336.9 25.8 447.5C33.7 459.7 47 468 62.1 468H449.9c15.1 0 28.4-8.3 36.3-20.5zM0 408.8L168.2 296.5 0 176.4v232.4z"/></svg> Contact Form</a>
+          <a class="action" href="mailto:1130.westport@gmail.com"><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="#111" d="M48 64C21.5 64 0 85.5 0 112v16.2L236.6 310.8c9.4 6.3 21.4 6.3 30.8 0L512 128.2V112c0-26.5-21.5-48-48-48H48zM512 176.4L343.8 296.5 512 408.8V176.4zM486.2 447.5L320 336.9l-48.6 32.4c-9.4 6.3-21.4 6.3-30.8 0L192 336.9 25.8 447.5C33.7 459.7 47 468 62.1 468H449.9c15.1 0 28.4-8.3 36.3-20.5zM0 408.8L168.2 296.5 0 176.4v232.4z"/></svg> Email Us</a>
+          <a class="action" href="tel:+18167121130"><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="#111" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24c-18.4 5-30.3 22.9-27.6 41.7c16.5 115.3 76.7 221.5 170 296.8c65.6 52.7 144.4 86.4 228.9 97.2c19.1 2.4 37-8.9 42.4-27.4l24-88c5.1-18.6-4.6-38.1-22.8-45.7l-80-32c-15.4-6.2-33.1-1.8-43.4 10.7L292.1 330C248 307.1 204.9 272 176.9 227.9l50.2-48.8c12.7-12.3 16.5-31.1 10-47.4l-32-80z"/></svg> Call Now</a>
         </div>
+        
+<div class="socials">
+  <a href="https://www.facebook.com/TrippinSmokeandVape/" target="_blank" aria-label="Facebook"><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="#1877F2" d="M279.14 288l14.22-92.66h-88.91V127.48c0-25.35 12.42-50.06 52.24-50.06H293V6.26S259.5 0 225.36 0C141.09 0 89.09 54.42 89.09 154.5V195.3H0v92.7h89.09V512h107.8V288z"/></svg></a>
+  <a href="https://www.instagram.com/trippin_smokes/" target="_blank" aria-label="Instagram"><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="#E1306C" d="M224 80C141.3 80 80 141.3 80 224s61.3 144 144 144 144-61.3 144-144S306.7 80 224 80zm0 64a80 80 0 1 1 0 160 80 80 0 1 1 0-160zm144-80c-17.7 0-32 14.3-32 32s14.3 32 32 32 32-14.3 32-32-14.3-32-32-32z"/></svg></a>
+  <a href="https://www.snapchat.com/add/discountkc" target="_blank" aria-label="Snapchat"><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><rect width="496" height="512" fill="#FFFC00"/><path fill="#000" d="M330.4 360.4c-9.6 17.2-60.8 29.4-118.8 29.4s-109.2-12.2-118.8-29.4c-4.8-8.6-1.2-18.6 7.4-24 43.2-27.6 75.6-68.4 90-118.8 8.8-30.6 13.2-62.4 13.2-96C203.6 67.2 246.4 24 299.6 24S395.6 67.2 395.6 120.4c0 33.6 4.4 65.4 13.2 96 14.4 50.4 46.8 91.2 90 118.8 8.6 5.4 12.2 15.4 7.4 24z"/></svg></a>
+</div>
 
-        <div class="socials">
-          <a href="https://www.facebook.com/TrippinSmokeandVape/" target="_blank" aria-label="Facebook">f</a>
-          <a href="https://www.instagram.com/trippin_smokes/" target="_blank" aria-label="Instagram">ig</a>
-          <a href="https://www.snapchat.com/add/discountkc" target="_blank" aria-label="Snapchat">sc</a>
-        </div>
 
-        <div class="columns" style="margin-top:18px">
-          <div class="feature card">
+        <div class="columns">
+          <div class="feature">
             <h3>Vapes & Disposables</h3>
             <p class="muted">Latest brands and flavors. Nic-salt and freebase options with coils, pods, and chargers.</p>
             <span class="tag">Elf/Esco/Flum</span><span class="tag">Geek/Voopoo</span><span class="tag">Refills</span>
           </div>
-          <div class="feature card">
+          <div class="feature">
             <h3>Cigars & Wraps</h3>
             <p class="muted">Premium and everyday cigars, plus wraps and cones in multiple sizes and flavors.</p>
             <span class="tag">Swisher</span><span class="tag">Backwoods</span><span class="tag">Dutch</span>
           </div>
-          <div class="feature card">
+          <div class="feature">
             <h3>Hookah & Shisha</h3>
             <p class="muted">Hookah sets, hoses, charcoal, and popular shisha flavors.</p>
             <span class="tag">Al Fakher</span><span class="tag">Starbuzz</span><span class="tag">Charcoal</span>
