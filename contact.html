@@ -12,25 +12,19 @@
     <div class="container header-inner">
       <div class="brand">
 <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 360" role="img" aria-label="Discount Smokes logo">
-  <defs><style>.t{font:700 110px Arial, Helvetica, sans-serif}</style></defs>
+  <defs><style>.t{font:700 90px Arial, Helvetica, sans-serif}</style></defs>
   <rect width="1080" height="360" fill="none"/>
   <text x="40" y="160" class="t" fill="#e63946">DISCOUNT</text>
-  <text x="40" y="270" class="t" fill="#ffffff" fill-opacity="0.9">SMOKES</text>
+  <text x="40" y="260" class="t" fill="#ffffff" fill-opacity="0.9">SMOKES</text>
   <g transform="translate(740,200)">
-    <rect x="0" y="0" width="300" height="22" rx="11" ry="11" fill="#f4f0e6" stroke="#fff" stroke-width="6"/>
-    <rect x="-84" y="0" width="84" height="22" rx="11" ry="11" fill="#f39c12" stroke="#fff" stroke-width="6"/>
-    <circle cx="300" cy="11" r="14" fill="#fff"/>
-    <circle cx="300" cy="11" r="10" fill="#e63946"/>
+    <rect x="0" y="0" width="260" height="18" rx="9" ry="9" fill="#f4f0e6" stroke="#fff" stroke-width="5"/>
+    <rect x="-74" y="0" width="74" height="18" rx="9" ry="9" fill="#f39c12" stroke="#fff" stroke-width="5"/>
+    <circle cx="260" cy="9" r="12" fill="#fff"/>
+    <circle cx="260" cy="9" r="9" fill="#e63946"/>
   </g>
-  <path d="M880 50c-8 32 48 35 34 76-11 32-58 24-58 56" fill="none" stroke="#ffffff" stroke-opacity="0.9" stroke-width="14" stroke-linecap="round"/>
 </svg>
 <h1 class="site-title">Discount Smokes</h1></div>
-      
-<nav>
-  <a href="index.html">Home</a>
-  <a href="contact.html" class="active">Contact</a>
-</nav>
-
+      <nav><a href='index.html'>Home</a><a href='contact.html' class='active'>Contact</a></nav>
     </div>
   </header>
 
@@ -45,46 +39,25 @@
     <div class="grid grid-2">
       <section class="card">
         <h2 id="form">Send a Message</h2>
-        <p class="muted">This form emails us automatically. Replace the <code>action</code> URL with your Formspree endpoint.</p>
-
-        <!-- OPTION A: Formspree (recommended for GitHub Pages) -->
         <form method="POST" action="https://formspree.io/f/your_form_id">
-          <div class="field">
-            <label for="name">Full Name</label>
-            <input id="name" name="name" placeholder="Your name" required />
-          </div>
-          <div class="field">
-            <label for="email">Email</label>
-            <input id="email" name="_replyto" type="email" placeholder="you@example.com" required />
-          </div>
-          <div class="field">
-            <label for="phone">Phone</label>
-            <input id="phone" name="phone" placeholder="+1 816 712 1130" />
-          </div>
-          <div class="field">
-            <label for="message">Message</label>
-            <textarea id="message" name="message" rows="5" placeholder="How can we help?" required></textarea>
-          </div>
+          <div class="field"><label for="name">Full Name</label><input id="name" name="name" required /></div>
+          <div class="field"><label for="email">Email</label><input id="email" name="_replyto" type="email" required /></div>
+          <div class="field"><label for="phone">Phone</label><input id="phone" name="phone" placeholder="+1 816 712 1130" /></div>
+          <div class="field"><label for="message">Message</label><textarea id="message" name="message" rows="5" required></textarea></div>
           <input type="text" name="_gotcha" style="display:none" />
           <input type="hidden" name="_next" value="https://YOUR_DOMAIN/thank-you.html" />
           <button class="action primary btn" type="submit">Send Message</button>
         </form>
-
-        <!-- OPTION B: Google Forms
-        <iframe src="PASTE-YOUR-GOOGLE-FORM-EMBED-URL-HERE" width="100%" height="900" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
-        -->
-
         <div class="row" style="margin-top:10px">
           <a class="action" href="mailto:1130.westport@gmail.com"><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="#111" d="M48 64C21.5 64 0 85.5 0 112v16.2L236.6 310.8c9.4 6.3 21.4 6.3 30.8 0L512 128.2V112c0-26.5-21.5-48-48-48H48zM512 176.4L343.8 296.5 512 408.8V176.4zM486.2 447.5L320 336.9l-48.6 32.4c-9.4 6.3-21.4 6.3-30.8 0L192 336.9 25.8 447.5C33.7 459.7 47 468 62.1 468H449.9c15.1 0 28.4-8.3 36.3-20.5zM0 408.8L168.2 296.5 0 176.4v232.4z"/></svg> Email</a>
           <a class="action" href="tel:+18167121130"><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="#111" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24c-18.4 5-30.3 22.9-27.6 41.7c16.5 115.3 76.7 221.5 170 296.8c65.6 52.7 144.4 86.4 228.9 97.2c19.1 2.4 37-8.9 42.4-27.4l24-88c5.1-18.6-4.6-38.1-22.8-45.7l-80-32c-15.4-6.2-33.1-1.8-43.4 10.7L292.1 330C248 307.1 204.9 272 176.9 227.9l50.2-48.8c12.7-12.3 16.5-31.1 10-47.4l-32-80z"/></svg> Call</a>
         </div>
       </section>
-
       <aside class="card">
         <h2>Visit Us</h2>
         <div class="address"><svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="#e63946" d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z"/></svg> <strong>1130 Westport Rd, Kansas City, MO 64111</strong></div>
         <div class="map"><iframe loading="lazy" allowfullscreen src="https://www.google.com/maps?q=1130%20Westport%20Rd%2C%20Kansas%20City%2C%20MO%2064111&output=embed"></iframe></div>
-        <h3 style="margin-top:14px">Hours</h3>
+        <h3 style="margin-top:12px">Hours</h3>
         <table class="table">
           <tbody>
             <tr><td>Mon–Thu</td><td>10:00 AM – 10:00 PM</td></tr>
