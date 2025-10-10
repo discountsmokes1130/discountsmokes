@@ -3,7 +3,7 @@ import os, json, datetime, re, pathlib, textwrap, sys
 try:
     import requests
     import markdown as md
-except Exception as e:
+except Exception:
     print("ERROR: missing deps. Ensure 'requests' and 'markdown' are installed.", file=sys.stderr)
     raise
 
@@ -18,7 +18,6 @@ INDEX     = POSTS_DIR / "index.json"
 TOPICS    = POSTS_DIR / "topics.json"
 STATE     = POSTS_DIR / ".topic_state.json"
 
-# ---------- helpers ----------
 def ensure_structure():
     POSTS_DIR.mkdir(parents=True, exist_ok=True)
     HTML_DIR.mkdir(parents=True, exist_ok=True)
@@ -64,27 +63,33 @@ def gen_with_openai(prompt:str)->str:
         ],
         "temperature":0.7,"max_tokens":700
     }
-    r=requests.post(url,headers=headers,json=body,timeout=60); r.raise_for_status()
+    r = requests.post(url, headers=headers, json=body, timeout=60)
+    r.raise_for_status()
     return r.json()["choices"][0]["message"]["content"]
 
 def slugify(s:str)->str:
-    s=s.lower(); s=re.sub(r"[^a-z0-9]+","-",s).strip("-"); return s or "post"
+    s = s.lower()
+    s = re.sub(r"[^a-z0-9]+","-",s).strip("-")
+    return s or "post"
 
-def unique_post_path(date:datetime.date, slug:str)->pathlib.Path:
-    base = POSTS_DIR / f"{date:%Y-%m-%d}-{slug}.md"
+def unique_html_path(date: datetime.date, slug: str) -> pathlib.Path:
+    base = HTML_DIR / f"{date:%Y-%m-%d}-{slug}.html"
     if not base.exists(): return base
-    i=1
+    i = 1
     while True:
-        p = POSTS_DIR / f"{date:%Y-%m-%d}-{slug}-{i}.md"
+        p = HTML_DIR / f"{date:%Y-%m-%d}-{slug}-{i}.html"
         if not p.exists(): return p
-        i+=1
+        i += 1
 
-def wrap_html(title:str, body_html:str)->str:
-    # Black header + white body, same as site
+def wrap_html(title:str, excerpt:str, body_html:str)->str:
+    year = datetime.date.today().year
+    # Include meta description/excerpt so rebuild can read it later
     return f"""<!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>{title} — Discount Smokes</title>
+<meta name="description" content="{excerpt}"/>
+<meta name="excerpt" content="{excerpt}"/>
 <link rel="icon" href="../../assets/favicon.svg"/>
 <style>
   body{{background:#fff;color:#111;margin:0;font-family:Arial,Helvetica,sans-serif}}
@@ -100,8 +105,8 @@ def wrap_html(title:str, body_html:str)->str:
   main.container{{padding:18px 0}}
   article.post{{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:18px;box-shadow:0 8px 18px rgba(0,0,0,.04)}}
   article.post h1{{margin-top:0}}
-  footer{{background:#000;color:#fff;text-align:center;padding:10px 0;margin-top:20px;font-size:14px}}
   article.post img{{max-width:100%;height:auto;border-radius:8px}}
+  footer{{background:#000;color:#fff;text-align:center;padding:10px 0;margin-top:20px;font-size:14px}}
 </style>
 </head><body>
 <header><div class="container header-inner">
@@ -124,21 +129,17 @@ def wrap_html(title:str, body_html:str)->str:
     <a href="../../blog.html">📰 Blog</a>
   </nav>
 </div></header>
-
 <main class="container">
   <article class="post">
     {body_html}
   </article>
 </main>
-
-<footer>© {datetime.date.today().year} Discount Smokes. All Rights Reserved.</footer>
+<footer>© {year} Discount Smokes. All Rights Reserved.</footer>
 </body></html>"""
 
 def markdown_to_html(md_text:str)->str:
-    # basic markdown → html; support headings/lists/links/etc
     return md.markdown(md_text, extensions=["extra"])
 
-# ---------- main ----------
 def main():
     ensure_structure()
     topics = read_topics()
@@ -163,35 +164,30 @@ Write a 350-500 word blog post for Discount Smokes (1130 Westport Rd, Kansas Cit
     title = gen_with_openai(title_prompt).strip().splitlines()[0].replace('"',"") or f"{category} Update"
     content_md = gen_with_openai(content_prompt)
 
-    # Extract excerpt
+    # Pull excerpt
     m = re.search(r"Excerpt:\s*(.+)", content_md, re.IGNORECASE)
     excerpt = m.group(1).strip() if m else "Stop by Discount Smokes in Westport for friendly help and new arrivals."
 
-    # Write .md
-    slug = slugify(title)
-    md_path = unique_post_path(today, slug)
-    md_path.write_text(content_md, encoding="utf-8")
-
-    # Write HTML twin
-    html_name = md_path.name.replace(".md",".html")
-    html_path = HTML_DIR / html_name
+    # Build HTML page only (no .md on disk)
     body_html = f"<h1>{title}</h1>\n" + markdown_to_html(content_md)
-    html_path.write_text(wrap_html(title, body_html), encoding="utf-8")
+    slug = slugify(title)
+    html_path = unique_html_path(today, slug)
+    html_path.write_text(wrap_html(title, excerpt, body_html), encoding="utf-8")
 
-    # Update index.json to point to HTML page
+    # Update index.json to point to the HTML page
     idx = json.loads(INDEX.read_text(encoding="utf-8"))
     idx.setdefault("posts", [])
     idx["posts"].insert(0, {
         "title": title,
         "date": f"{today:%Y-%m-%d}",
-        "url": f"posts/html/{html_name}",
+        "url": f"posts/html/{html_path.name}",
         "excerpt": excerpt,
         "category": category
     })
     INDEX.write_text(json.dumps(idx, indent=2), encoding="utf-8")
 
     bump_index(i, len(topics))
-    print(f"Wrote: {md_path} and {html_path}")
+    print(f"Wrote HTML post: {html_path}")
 
 if __name__ == "__main__":
     main()
