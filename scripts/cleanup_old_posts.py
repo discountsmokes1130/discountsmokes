@@ -1,22 +1,13 @@
 #!/usr/bin/env python3
-"""
-Deletes posts older than a cutoff (default 60 days) from posts/*.md
-and removes them from posts/index.json.
-
-Safety:
-- Skips files without a parseable YYYY-MM-DD prefix.
-- Keeps at least KEEP_MIN most recent posts (default 20), even if older.
-- DRY_RUN=1 will log actions without deleting.
-"""
-
 import os, json, re, pathlib, datetime, sys
 
 ROOT = pathlib.Path(".")
 POSTS_DIR = ROOT / "posts"
-INDEX = POSTS_DIR / "index.json"
+HTML_DIR  = POSTS_DIR / "html"
+INDEX     = POSTS_DIR / "index.json"
 
-CUTOFF_DAYS = int(os.getenv("CUTOFF_DAYS", "60"))  # delete if older than this
-KEEP_MIN    = int(os.getenv("KEEP_MIN", "20"))     # always keep this many newest
+CUTOFF_DAYS = int(os.getenv("CUTOFF_DAYS", "60"))
+KEEP_MIN    = int(os.getenv("KEEP_MIN", "20"))
 DRY_RUN     = os.getenv("DRY_RUN", "")
 
 DATE_RE = re.compile(r"^(\d{4})-(\d{2})-(\d{2})-")
@@ -35,7 +26,6 @@ def main():
     today = datetime.date.today()
     cutoff_date = today - datetime.timedelta(days=CUTOFF_DAYS)
 
-    # Load index safely
     if INDEX.exists():
         try:
             idx = json.loads(INDEX.read_text(encoding="utf-8"))
@@ -45,23 +35,21 @@ def main():
     else:
         posts = []
 
-    # Gather files on disk with parsed dates
+    HTML_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Collect HTML posts
     entries = []
-    for p in POSTS_DIR.glob("*.md"):
+    for p in HTML_DIR.glob("*.html"):
         dt = parse_date_from_name(p.name)
         entries.append((p, dt))
 
-    # Sort newest -> oldest (None dates go last)
+    # Sort newest -> oldest
     entries.sort(key=lambda x: (x[1] is not None, x[1]), reverse=True)
-
-    # Always keep at least KEEP_MIN newest files
     keep_set = set(e[0].name for e in entries[:KEEP_MIN])
 
     to_delete = []
-    for p, dt in entries[KEEP_MIN:]:  # only consider beyond KEEP_MIN newest
-        if dt is None:
-            continue
-        if dt < cutoff_date:
+    for p, dt in entries[KEEP_MIN:]:
+        if dt and dt < cutoff_date:
             to_delete.append(p)
 
     deleted_names = set()
@@ -78,16 +66,26 @@ def main():
             except Exception as e:
                 print(f"ERROR deleting {p}: {e}", file=sys.stderr)
 
-    # Update index.json if we removed anything
+    # Remove any leftover .md files (legacy)
+    for md_file in POSTS_DIR.glob("*.md"):
+        try:
+            if DRY_RUN:
+                print(f"[DRY_RUN] Would remove legacy file: {md_file}")
+            else:
+                md_file.unlink()
+                print(f"Removed legacy file: {md_file}")
+        except Exception as e:
+            print(f"ERROR removing {md_file}: {e}", file=sys.stderr)
+
+    # Update index.json to drop deleted HTML posts
     if deleted_names:
         new_posts = []
         for post in posts:
             url = post.get("url", "")
             fname = url.split("/")[-1] if "/" in url else url
-            if fname and fname in deleted_names:
+            if fname in deleted_names:
                 continue
             new_posts.append(post)
-
         if DRY_RUN:
             print(f"[DRY_RUN] Would write index.json with {len(new_posts)} posts")
         else:
