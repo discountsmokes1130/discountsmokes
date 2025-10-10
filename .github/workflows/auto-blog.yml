@@ -2,7 +2,7 @@ name: Auto Blog
 
 on:
   schedule:
-    - cron: "40 12 * * 5"   # Every Tuesday at 15:00 UTC (~9am CT)
+    - cron: "0 13 * * 5"   # Every Tuesday at 15:00 UTC (~9am CT)
   workflow_dispatch: {}
 
 permissions:
