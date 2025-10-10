@@ -1,13 +1,27 @@
 #!/usr/bin/env python3
 import os, json, datetime, re, pathlib, textwrap, sys
-import requests
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-if not OPENAI_API_KEY:
-    print("ERROR: OPENAI_API_KEY is not set.", file=sys.stderr)
+try:
+    import requests
+except Exception as e:
+    print("ERROR: 'requests' not available. Did pip install run?", file=sys.stderr)
     sys.exit(1)
 
-MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+DRY_RUN = os.getenv("DRY_RUN", "")
+
+REPO_ROOT = pathlib.Path(".")
+POSTS_DIR = REPO_ROOT / "posts"
+INDEX_FILE = POSTS_DIR / "index.json"
+
+def ensure_structure():
+    if not POSTS_DIR.exists():
+        print("Creating posts/ ...")
+        POSTS_DIR.mkdir(parents=True, exist_ok=True)
+    if not INDEX_FILE.exists():
+        print("Seed posts/index.json ...")
+        INDEX_FILE.write_text(json.dumps({"posts": []}, indent=2), encoding="utf-8")
 
 def slugify(s: str) -> str:
     s = s.lower()
@@ -15,36 +29,45 @@ def slugify(s: str) -> str:
     return s or "post"
 
 def gen_with_openai(prompt: str) -> str:
+    """Generate text using OpenAI API or fallback content if API key missing."""
+    if DRY_RUN or not OPENAI_API_KEY:
+        print("DRY_RUN active or OPENAI_API_KEY missing — generating placeholder content.")
+        return textwrap.dedent(f"""
+        Excerpt: Visit Discount Smokes in Westport for helpful service and new arrivals.
+
+        ## Placeholder Post
+        This is a placeholder blog post created by the automation. Once you add
+        the OPENAI_API_KEY secret in your GitHub repo, the system will publish
+        fully written posts automatically.
+
+        ### Stop By
+        1130 Westport Rd, Kansas City, MO 64111
+        """).strip()
+
     url = "https://api.openai.com/v1/chat/completions"
     headers = {"Authorization": f"Bearer {OPENAI_API_KEY}", "Content-Type": "application/json"}
     body = {
-        "model": MODEL,
+        "model": OPENAI_MODEL,
         "messages": [
-            {"role": "system", "content": "You write concise, helpful, and accurate blog posts for a smoke shop. Avoid medical claims. Keep it friendly and local to Kansas City Westport."},
+            {"role": "system", "content": "You write concise, friendly blog posts for a Kansas City smoke shop. Avoid medical claims."},
             {"role": "user", "content": prompt}
         ],
         "temperature": 0.7,
         "max_tokens": 700
     }
     r = requests.post(url, headers=headers, json=body, timeout=60)
-    r.raise_for_status()
+    try:
+        r.raise_for_status()
+    except Exception as e:
+        print("ERROR: OpenAI API error:", r.text, file=sys.stderr)
+        raise
     data = r.json()
-    content = data["choices"][0]["message"]["content"]
-    return content
+    return data["choices"][0]["message"]["content"]
 
 def main():
-    repo_root = pathlib.Path(".")
-    posts_dir = repo_root / "posts"
-    posts_dir.mkdir(parents=True, exist_ok=True)
-    idx_file = posts_dir / "index.json"
-    if idx_file.exists():
-        idx = json.loads(idx_file.read_text(encoding="utf-8"))
-    else:
-        idx = {"posts": []}
+    print("== Auto Blog: start ==")
+    ensure_structure()
 
-    today = datetime.date.today().strftime("%Y-%m-%d")
-
-    # Simple topic rotation
     topics = [
         "New vape arrivals and flavors this week",
         "Tips for choosing between disposables and refillables",
@@ -54,41 +77,54 @@ def main():
         "Gummies: types and what to look for (no medical claims)",
         "Smoking accessories: grinders, papers, and trays spotlight",
     ]
-    topic = topics[datetime.date.today().toordinal() % len(topics)]
+    today = datetime.date.today()
+    topic = topics[today.toordinal() % len(topics)]
 
+    # Title prompt
     title_prompt = f"Write a catchy title (max 10 words) for a blog post about: {topic}."
-    title = gen_with_openai(title_prompt).strip().replace('"','')
-    title = title.splitlines()[0]
 
-    post_prompt = f\"\"\"Write a 300-450 word blog post for Discount Smokes (1130 Westport Rd, Kansas City, MO) about: {topic}.
+    # ✅ Fixed triple quotes here
+    content_prompt = f"""Write a 300-450 word blog post for Discount Smokes (1130 Westport Rd, Kansas City, MO) about: {topic}.
 - Avoid medical claims or health promises.
 - Friendly, helpful tone. End with a short call to visit the shop.
 - Add a 1-2 sentence excerpt at the start, clearly marked as 'Excerpt:'
 - Include a simple markdown subheading or two.
-\"\"\"
-    content = gen_with_openai(post_prompt)
+"""
+
+    try:
+        title = gen_with_openai(title_prompt).strip().splitlines()[0].replace('"','')
+        if not title:
+            title = "Store Update"
+        content = gen_with_openai(content_prompt)
+    except Exception as e:
+        print("FATAL: Could not generate content:", e, file=sys.stderr)
+        sys.exit(1)
 
     # Extract excerpt
-    excerpt_match = re.search(r"Excerpt:\s*(.+)", content, re.IGNORECASE)
-    excerpt = excerpt_match.group(1).strip() if excerpt_match else "Stop by Discount Smokes in Westport for friendly help and new arrivals."
+    m = re.search(r"Excerpt:\s*(.+)", content, re.IGNORECASE)
+    excerpt = m.group(1).strip() if m else "Stop by Discount Smokes in Westport for friendly help and new arrivals."
 
     slug = slugify(title)
-    filename = f"{today}-{slug}.md"
-    post_path = posts_dir / filename
+    filename = f"{today:%Y-%m-%d}-{slug}.md"
+    post_path = POSTS_DIR / filename
     post_url = f"posts/{filename}"
 
+    print(f"Writing post: {post_path}")
     post_path.write_text(content, encoding="utf-8")
 
-    # Update index.json
+    # Update index
+    idx = json.loads(INDEX_FILE.read_text(encoding="utf-8"))
+    idx.setdefault("posts", [])
     idx["posts"].insert(0, {
         "title": title,
-        "date": today,
+        "date": f"{today:%Y-%m-%d}",
         "url": post_url,
         "excerpt": excerpt,
         "category": "General"
     })
-    idx_file.write_text(json.dumps(idx, indent=2), encoding="utf-8")
-    print(f"Created {post_path}")
+    INDEX_FILE.write_text(json.dumps(idx, indent=2), encoding="utf-8")
+
+    print("== Auto Blog: success ==")
 
 if __name__ == "__main__":
     main()
