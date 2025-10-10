@@ -56,28 +56,37 @@
       </div>
     </section>
 
-    <section class="container">
-      <div class="posts">
-        <article class="post">
-          <div class="cover"><img src="assets/cover-1.jpg" alt="Welcome to the Discount Smokes Blog"></div>
-          <div class="body">
-            <h2>Welcome — We’re Blogging!</h2>
-            <p>We’re excited to launch our new blog where we’ll share store updates, product highlights, and local Westport news. Stop by often for fresh deals and tips.</p>
-            <a class="readmore" href="#">Read more</a>
-          </div>
-        </article>
+    <script>
+    async function loadPosts() {
+      try {
+        const res = await fetch('posts/index.json', { cache: 'no-store' });
+        if (!res.ok) throw new Error('Failed to fetch posts index');
+        const data = await res.json();
+        const list = document.getElementById('posts-list');
+        list.innerHTML = '';
+        if (!data.posts || data.posts.length === 0) {
+          list.innerHTML = '<p class="muted">No posts yet — check back soon.</p>';
+          return;
+        }
+        data.posts.forEach(p => {
+          const card = document.createElement('article');
+          card.className = 'post';
+          card.innerHTML = `
+            <div class="meta">${p.date} · ${p.category || 'Update'}</div>
+            <h2>${p.title}</h2>
+            <p>${p.excerpt}</p>
+            <a href="${p.url}">Read more</a>
+          `;
+          list.appendChild(card);
+        });
+      } catch (e) {
+        console.error(e);
+        document.getElementById('posts-list').innerHTML = '<p class="muted">Could not load posts.</p>';
+      }
+    }
+    loadPosts();
+  </script>
 
-        <article class="post">
-          <div class="cover"><img src="assets/cover-2.jpg" alt="What’s New in Vapes & Disposables"></div>
-          <div class="body">
-            <h2>What’s New in Vapes & Disposables</h2>
-            <p>We’ve added new vape brands and flavors! Come explore our latest inventory of disposables, pods, and coils available now.</p>
-            <a class="readmore" href="#">Read more</a>
-          </div>
-        </article>
-      </div>
-    </section>
-  </main>
 
   <footer>© 2025 Discount Smokes. All Rights Reserved. · <a href="blog.html">Blog</a></footer>
 </body>
