@@ -4,32 +4,28 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Discount Smokes — Blog</title>
-  <link rel="icon" href="assets/favicon.svg" />
   <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="assets/favicon.svg" />
   <style>
     .blog-hero{padding:28px 0 10px;text-align:center;border-bottom:1px solid #eee}
     .blog-hero h1{margin:0;color:#e63946;font-size:28px}
     .blog-hero p{margin:8px 0 0;color:#6b7280}
-    .breadcrumb{font-size:13px;color:#6b7280;margin:8px 0;text-align:center}
-    .breadcrumb a{color:#6b7280}
     .posts{display:grid;gap:18px;margin:18px 0}
     @media(min-width:900px){.posts{grid-template-columns:1fr 1fr}}
-    .post{background:#fff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;box-shadow:0 8px 18px rgba(0,0,0,.04)}
-    .post .cover{aspect-ratio:16/9;overflow:hidden;background:#f3f4f6}
-    .post .cover img{width:100%;height:100%;object-fit:cover;display:block}
-    .post .body{padding:14px}
+    .post{background:#fff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;box-shadow:0 8px 18px rgba(0,0,0,.04);padding:14px}
+    .post h2{margin:0 0 6px;font-size:18px;color:#111827}
     .post .meta{font-size:12px;color:#6b7280;margin-bottom:6px}
-    .post h2{margin:0 0 8px;font-size:18px;color:#111827}
-    .post p{margin:0 0 10px;color:#374151;font-size:14px}
-    .post .readmore{display:inline-block;margin-top:6px;color:#e63946}
+    .post p{margin:0 0 8px;color:#374151;font-size:14px}
+    .post a{color:#e63946}
+    .error{background:#fff0f0;border:1px solid #ffc9c9;color:#7f1d1d;padding:12px;border-radius:10px;margin:16px 0}
   </style>
 </head>
 <body>
   <header>
     <div class="container header-inner">
       <div class="brand">
-        <a href="index.html" aria-label="Go to home">
-            <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 360" role="img" aria-label="Discount Smokes logo">
+        <a href="index.html">
+          <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 360" role="img" aria-label="Discount Smokes logo">
             <defs><style>.t{font:700 90px Arial, Helvetica, sans-serif}</style></defs>
             <rect width="1080" height="360" fill="none"/>
             <text x="40" y="160" class="t" fill="#e63946">DISCOUNT</text>
@@ -47,27 +43,37 @@
     </div>
   </header>
 
-  <main>
+  <main class="container">
     <section class="blog-hero">
-      <div class="container">
-        <div class="breadcrumb"><a href="index.html">Home</a> › <span>Blog</span></div>
-        <h1>Our Blog</h1>
-        <p>News, product tips, and updates from Discount Smokes at 1130 Westport Rd, Kansas City, MO.</p>
-      </div>
+      <h1>Our Blog</h1>
+      <p>News, product tips, and updates from 1130 Westport Rd, Kansas City, MO.</p>
     </section>
 
-    <script>
+    <div id="error" class="error" style="display:none"></div>
+    <section class="posts" id="posts-list">
+      <!-- posts render here -->
+    </section>
+  </main>
+
+  <footer>© 2025 Discount Smokes. All Rights Reserved.</footer>
+
+  <script>
     async function loadPosts() {
+      const list = document.getElementById('posts-list');
+      const errBox = document.getElementById('error');
       try {
-        const res = await fetch('posts/index.json', { cache: 'no-store' });
-        if (!res.ok) throw new Error('Failed to fetch posts index');
+        // Cache-bust to avoid stale JSON
+        const url = 'posts/index.json?t=' + Date.now();
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) {
+          throw new Error('HTTP ' + res.status + ' for ' + url);
+        }
         const data = await res.json();
-        const list = document.getElementById('posts-list');
-        list.innerHTML = '';
         if (!data.posts || data.posts.length === 0) {
           list.innerHTML = '<p class="muted">No posts yet — check back soon.</p>';
           return;
         }
+        list.innerHTML = '';
         data.posts.forEach(p => {
           const card = document.createElement('article');
           card.className = 'post';
@@ -81,13 +87,11 @@
         });
       } catch (e) {
         console.error(e);
-        document.getElementById('posts-list').innerHTML = '<p class="muted">Could not load posts.</p>';
+        errBox.style.display = 'block';
+        errBox.textContent = 'Could not load posts. Tip: open /posts/index.json directly on your site. Error: ' + e.message;
       }
     }
     loadPosts();
   </script>
-
-
-  <footer>© 2025 Discount Smokes. All Rights Reserved. · <a href="blog.html">Blog</a></footer>
 </body>
 </html>
