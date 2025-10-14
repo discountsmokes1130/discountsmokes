@@ -42,14 +42,18 @@ jobs:
         run: |
           python scripts/cleanup_old_posts.py
 
-      - name: Email subscribers about the new post
+            - name: Email subscribers about the new post
+        continue-on-error: true
         env:
           SHEETBEST_URL: ${{ secrets.SHEETBEST_URL }}
+          SHEETBEST_UNSUB_URL: ${{ secrets.SHEETBEST_UNSUB_URL }}
+          UNSUBSCRIBE_SECRET: ${{ secrets.UNSUBSCRIBE_SECRET }}
           GMAIL_USER: "1130.westport@gmail.com"
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           SITE_BASE: "https://discountsmokeskc.com/"
         run: |
           python scripts/email_subscribers.py
+
 
       - name: Commit & push updates
         run: |
