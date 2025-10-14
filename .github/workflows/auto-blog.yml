@@ -37,7 +37,7 @@ jobs:
     SHEETBEST_URL: ${{ secrets.SHEETBEST_URL }}
     GMAIL_USER: "1130.westport@gmail.com"
     GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-    SITE_BASE: "https://<YOUR_USER>.github.io/<YOUR_REPO>/"  # update
+    SITE_BASE: "https://discountsmokeskc.com/"  # update
   run: |
     python scripts/email_subscribers.py
 
