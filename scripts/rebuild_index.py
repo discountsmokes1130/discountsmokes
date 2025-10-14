@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
+# Combined generator + index rebuilder
+# - Generates ONE new HTML post from posts/topics.json (rotating through topics)
+# - Rebuilds posts/index.json from posts/html/*.html (HTML-only flow)
+# - Injects footer Subscribe form using Sheet.best (SHEETBEST_URL env)
+
 import os, json, datetime, re, pathlib, textwrap, sys
+
 try:
     import requests
     import markdown as md
@@ -7,69 +13,47 @@ except Exception:
     print("ERROR: missing deps. Ensure 'requests' and 'markdown' are installed.", file=sys.stderr)
     raise
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-DRY_RUN = os.getenv("DRY_RUN", "")
+# ====== Config / Env ======
+OPENAI_API_KEY  = os.getenv("OPENAI_API_KEY")
+OPENAI_MODEL    = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+DRY_RUN         = os.getenv("DRY_RUN", "")
+SHEETBEST_URL   = os.getenv("SHEETBEST_URL", "").strip()  # Sheet.best endpoint
 
-# NEW: subscriber endpoint + token (injected into generated HTML)
-SUBSCRIBERS_URL = os.getenv("SUBSCRIBERS_URL", "")      # e.g., https://script.google.com/macros/s/XXXX/exec
-SUBSCRIBERS_TOKEN = os.getenv("SUBSCRIBERS_TOKEN", "")  # your secret token
+ROOT       = pathlib.Path(".")
+POSTS_DIR  = ROOT / "posts"
+HTML_DIR   = POSTS_DIR / "html"
+INDEX_PATH = POSTS_DIR / "index.json"
+TOPICS     = POSTS_DIR / "topics.json"
+STATE      = POSTS_DIR / ".topic_state.json"
 
-ROOT = pathlib.Path(".")
-POSTS_DIR = ROOT / "posts"
-HTML_DIR  = POSTS_DIR / "html"
-INDEX     = POSTS_DIR / "index.json"
-TOPICS    = POSTS_DIR / "topics.json"
-STATE     = POSTS_DIR / ".topic_state.json"
-
+# ====== Utilities ======
 def ensure_structure():
     POSTS_DIR.mkdir(parents=True, exist_ok=True)
     HTML_DIR.mkdir(parents=True, exist_ok=True)
-    if not INDEX.exists():
-        INDEX.write_text(json.dumps({"posts": []}, indent=2), encoding="utf-8")
+    if not INDEX_PATH.exists():
+        INDEX_PATH.write_text(json.dumps({"posts": []}, indent=2), encoding="utf-8")
     if not TOPICS.exists():
         raise SystemExit("ERROR: posts/topics.json not found.")
 
 def read_topics():
     data = json.loads(TOPICS.read_text(encoding="utf-8"))
     t = data.get("topics", [])
-    if not t: raise SystemExit("ERROR: posts/topics.json has no 'topics'")
+    if not t:
+        raise SystemExit("ERROR: posts/topics.json has no 'topics' array.")
     return t
 
 def get_next_index(total:int)->int:
     if STATE.exists():
-        try: i = int(json.loads(STATE.read_text(encoding="utf-8")).get("next_index",0))
-        except: i = 0
-    else: i = 0
-    return 0 if i<0 or i>=total else i
+        try:
+            i = int(json.loads(STATE.read_text(encoding="utf-8")).get("next_index", 0))
+        except:
+            i = 0
+    else:
+        i = 0
+    return 0 if i < 0 or i >= total else i
 
 def bump_index(i:int,total:int):
     STATE.write_text(json.dumps({"next_index": (i+1)%total}, indent=2), encoding="utf-8")
-
-def gen_with_openai(prompt:str)->str:
-    if DRY_RUN or not OPENAI_API_KEY:
-        return textwrap.dedent("""
-        Excerpt: Visit Discount Smokes in Westport for helpful service and new arrivals.
-
-        ## Placeholder Post
-        This is a placeholder blog post created by automation. Add OPENAI_API_KEY to publish full posts.
-
-        ### Visit Us
-        1130 Westport Rd, Kansas City, MO 64111
-        """).strip()
-    url="https://api.openai.com/v1/chat/completions"
-    headers={"Authorization":f"Bearer {OPENAI_API_KEY}","Content-Type":"application/json"}
-    body={
-        "model":OPENAI_MODEL,
-        "messages":[
-            {"role":"system","content":"You write concise, friendly, accurate posts for Discount Smokes (Westport, KC). Avoid medical claims."},
-            {"role":"user","content":prompt}
-        ],
-        "temperature":0.7,"max_tokens":700
-    }
-    r = requests.post(url, headers=headers, json=body, timeout=60)
-    r.raise_for_status()
-    return r.json()["choices"][0]["message"]["content"]
 
 def slugify(s:str)->str:
     s = s.lower()
@@ -85,21 +69,14 @@ def unique_html_path(date: datetime.date, slug: str) -> pathlib.Path:
         if not p.exists(): return p
         i += 1
 
-def subscribe_block():
-    """
-    Returns the Subscribe form + script.
-    Uses SUBSCRIBERS_URL and SUBSCRIBERS_TOKEN from env; if missing,
-    shows a helpful message to the user but keeps page working.
-    """
-    # Safely serialize for JS
-    url_js = json.dumps(SUBSCRIBERS_URL)
-    tok_js = json.dumps(SUBSCRIBERS_TOKEN)
-    disabled_msg = ""
-    if not SUBSCRIBERS_URL or not SUBSCRIBERS_TOKEN:
-        disabled_msg = "<div style='color:#ef4444;font-size:12px;margin-top:6px'>Subscribe service not configured.</div>"
+def markdown_to_html(md_text:str)->str:
+    return md.markdown(md_text, extensions=["extra"])
 
+def subscribe_block():
+    # JS treats any 2xx as success; Sheet.best returns inserted rows (array), not {ok:true}
+    url_js = json.dumps(SHEETBEST_URL)
+    note = "" if SHEETBEST_URL else "<div style='color:#ef4444;font-size:12px;margin-top:6px'>Subscribe service not configured.</div>"
     return f"""
-<!-- Subscribe (footer) -->
 <section class="container" style="max-width:1080px;margin:24px auto 8px;padding:0 16px;">
   <form id="subscribe-form" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
     <label for="sub-email" style="font-weight:600;">Subscribe for new posts:</label>
@@ -110,48 +87,43 @@ def subscribe_block():
     </button>
     <span id="sub-msg" style="font-size:13px;color:#6b7280;"></span>
   </form>
-  {disabled_msg}
+  {note}
 </section>
-
 <script>
-  const SUBSCRIBE_URL = {url_js};
-  const SUBSCRIBE_TOKEN = {tok_js};
-
-  document.getElementById('subscribe-form')?.addEventListener('submit', async (e) => {{
+  const SHEETBEST_URL = {url_js};
+  async function subscribeHandler(e) {{
     e.preventDefault();
+    const emailEl = document.getElementById('sub-email');
     const msg = document.getElementById('sub-msg');
-    const input = document.getElementById('sub-email');
-    const email = (input.value || '').trim();
-    if (!SUBSCRIBE_URL || !SUBSCRIBE_TOKEN) {{
-      msg.textContent = 'Subscribe service not configured yet.';
-      return;
-    }}
-    if (!email || !email.includes('@')) {{
-      msg.textContent = 'Please enter a valid email address.';
-      return;
-    }}
-    msg.textContent = 'Saving...';
+    const email = (emailEl.value || '').trim();
+    if (!SHEETBEST_URL) {{ msg.textContent='Subscribe service not configured.'; return; }}
+    if (!email || !email.includes('@')) {{ msg.textContent='Please enter a valid email.'; return; }}
+    msg.textContent='Saving...';
     try {{
-      const res = await fetch(SUBSCRIBE_URL + '?action=subscribe&token=' + encodeURIComponent(SUBSCRIBE_TOKEN), {{
+      const payload = [{{ email, date: new Date().toISOString(), source: location.pathname }}];
+      const res = await fetch(SHEETBEST_URL, {{
         method: 'POST',
         headers: {{ 'Content-Type': 'application/json' }},
-        body: JSON.stringify({{ email, source: location.pathname }})
+        body: JSON.stringify(payload)
       }});
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
-      msg.textContent = data.ok ? 'Subscribed! Check your inbox for updates.' : (data.error || 'Could not subscribe.');
-      if (data.ok) input.value = '';
+      if (!res.ok) {{
+        const txt = await res.text().catch(() => '');
+        throw new Error(`HTTP ${{res.status}}${{txt ? ': ' + txt : ''}}`);
+      }}
+      msg.textContent = 'Subscribed! Check your inbox for updates.';
+      emailEl.value = '';
     }} catch (err) {{
-      console.error(err);
+      console.error('Subscribe failed:', err);
       msg.textContent = 'Could not subscribe. Please try again.';
     }}
-  }});
+  }}
+  const form = document.getElementById('subscribe-form');
+  if (form) form.addEventListener('submit', subscribeHandler);
 </script>
 """
 
 def wrap_html(title:str, excerpt:str, body_html:str)->str:
     year = datetime.date.today().year
-    # Include meta description/excerpt so rebuild can read it later
     return f"""<!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -197,6 +169,7 @@ def wrap_html(title:str, excerpt:str, body_html:str)->str:
     <a href="../../blog.html">📰 Blog</a>
   </nav>
 </div></header>
+
 <main class="container">
   <article class="post">
     {body_html}
@@ -208,10 +181,34 @@ def wrap_html(title:str, excerpt:str, body_html:str)->str:
 <footer>© {year} Discount Smokes. All Rights Reserved.</footer>
 </body></html>"""
 
-def markdown_to_html(md_text:str)->str:
-    return md.markdown(md_text, extensions=["extra"])
+# ====== OpenAI generation ======
+def gen_with_openai(prompt:str)->str:
+    if DRY_RUN or not OPENAI_API_KEY:
+        return textwrap.dedent("""
+        Excerpt: Visit Discount Smokes in Westport for helpful service and new arrivals.
 
-def main():
+        ## Placeholder Post
+        This is a placeholder blog post created by automation. Add OPENAI_API_KEY to publish full posts.
+
+        ### Visit Us
+        1130 Westport Rd, Kansas City, MO 64111
+        """).strip()
+    url="https://api.openai.com/v1/chat/completions"
+    headers={"Authorization":f"Bearer {OPENAI_API_KEY}","Content-Type":"application/json"}
+    body={
+        "model":OPENAI_MODEL,
+        "messages":[
+            {"role":"system","content":"You write concise, friendly, accurate posts for Discount Smokes (Westport, KC). Avoid medical claims."},
+            {"role":"user","content":prompt}
+        ],
+        "temperature":0.7,"max_tokens":700
+    }
+    r = requests.post(url, headers=headers, json=body, timeout=60)
+    r.raise_for_status()
+    return r.json()["choices"][0]["message"]["content"]
+
+def generate_one_post():
+    """Generate ONE post (HTML) and update posts/index.json by inserting newest entry at top."""
     ensure_structure()
     topics = read_topics()
     today  = datetime.date.today()
@@ -230,23 +227,24 @@ Write a 350-500 word blog post for Discount Smokes (1130 Westport Rd, Kansas Cit
 - Include 1-2 markdown subheadings.
 - End with a brief invite to visit the shop (21+ for nicotine purchases).
 - Category: {category}
-"""
+""".strip()
 
+    # Title + Content
     title = gen_with_openai(title_prompt).strip().splitlines()[0].replace('"',"") or f"{category} Update"
     content_md = gen_with_openai(content_prompt)
 
-    # Pull excerpt
+    # Excerpt
     m = re.search(r"Excerpt:\s*(.+)", content_md, re.IGNORECASE)
     excerpt = m.group(1).strip() if m else "Stop by Discount Smokes in Westport for friendly help and new arrivals."
 
-    # Build HTML page only (no .md on disk)
+    # Write HTML page
     body_html = f"<h1>{title}</h1>\n" + markdown_to_html(content_md)
     slug = slugify(title)
     html_path = unique_html_path(today, slug)
     html_path.write_text(wrap_html(title, excerpt, body_html), encoding="utf-8")
 
-    # Update index.json to point to the HTML page
-    idx = json.loads(INDEX.read_text(encoding="utf-8"))
+    # Insert into index.json (at top)
+    idx = json.loads(INDEX_PATH.read_text(encoding="utf-8"))
     idx.setdefault("posts", [])
     idx["posts"].insert(0, {
         "title": title,
@@ -255,10 +253,87 @@ Write a 350-500 word blog post for Discount Smokes (1130 Westport Rd, Kansas Cit
         "excerpt": excerpt,
         "category": category
     })
-    INDEX.write_text(json.dumps(idx, indent=2), encoding="utf-8")
+    INDEX_PATH.write_text(json.dumps(idx, indent=2), encoding="utf-8")
 
     bump_index(i, len(topics))
-    print(f"Wrote HTML post: {html_path}")
+    print(f"[generate] Wrote HTML post: {html_path}")
+
+# ====== Index rebuild (HTML-only) ======
+TITLE_RE   = re.compile(r"<h1[^>]*>(.*?)</h1>", re.I | re.S)
+EXCERPT_RE = re.compile(r'<meta\s+name=["\']excerpt["\']\s+content=["\'](.*?)["\']', re.I)
+
+def strip_tags(s: str) -> str:
+    return re.sub(r"<[^>]+>", "", s or "").strip()
+
+def extract_title(html: str, fallback: str) -> str:
+    m = TITLE_RE.search(html)
+    return strip_tags(m.group(1)) if m else fallback
+
+def extract_excerpt(html: str, fallback: str) -> str:
+    m = EXCERPT_RE.search(html)
+    if m:
+        return m.group(1).strip()
+    pm = re.search(r"<p[^>]*>(.*?)</p>", html, re.I | re.S)
+    if pm:
+        t = strip_tags(pm.group(1))
+        return (t[:180] + "…") if len(t) > 180 else t
+    return fallback
+
+def date_from_filename(name: str) -> str:
+    try:
+        yyyy, mm, dd, _ = name.split("-", 3)
+        return f"{yyyy}-{mm}-{dd}"
+    except Exception:
+        return datetime.date.today().isoformat()
+
+def rebuild_index():
+    POSTS_DIR.mkdir(parents=True, exist_ok=True)
+    HTML_DIR.mkdir(parents=True, exist_ok=True)
+
+    entries = []
+    for file in HTML_DIR.glob("*.html"):
+        name = file.name
+        date_iso = date_from_filename(name)
+        try:
+            html = file.read_text(encoding="utf-8", errors="replace")
+        except Exception as e:
+            print(f"[rebuild] Skipping {name}: {e}", file=sys.stderr)
+            continue
+
+        fallback_title = re.sub(r"\.html$", "", name).split("-", 3)[-1].replace("-", " ").title()
+        title = extract_title(html, fallback_title)
+        excerpt = extract_excerpt(html, "Stop by Discount Smokes in Westport for friendly help and new arrivals.")
+
+        entries.append({
+            "title": title,
+            "date": date_iso,
+            "url": f"posts/html/{name}",
+            "excerpt": excerpt,
+            "category": "General"
+        })
+
+    entries.sort(key=lambda e: e["date"], reverse=True)
+    INDEX_PATH.write_text(json.dumps({"posts": entries}, indent=2), encoding="utf-8")
+    print(f"[rebuild] Wrote {INDEX_PATH} with {len(entries)} HTML posts")
+
+# ====== Main ======
+def main():
+    # 1) Generate one post
+    try:
+        generate_one_post()
+    except SystemExit as se:
+        # Missing topics or structure — surface and stop
+        raise
+    except Exception as e:
+        # Log error but continue to rebuild index (so site stays consistent)
+        print(f"[generate] ERROR: {e}", file=sys.stderr)
+
+    # 2) Rebuild index from all existing HTML files
+    try:
+        rebuild_index()
+    except Exception as e:
+        print(f"[rebuild] ERROR: {e}", file=sys.stderr)
+        raise
 
 if __name__ == "__main__":
     main()
