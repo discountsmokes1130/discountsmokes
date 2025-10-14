@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 import os, json, smtplib, ssl, urllib.request
 
-SHEETBEST_URL = os.getenv("SHEETBEST_URL")         # same endpoint
+SHEETBEST_URL = os.getenv("SHEETBEST_URL")          # Sheet.best endpoint
 FROM_EMAIL    = os.getenv("GMAIL_USER")             # 1130.westport@gmail.com
 APP_PASSWORD  = os.getenv("GMAIL_APP_PASSWORD")     # Gmail App Password
-SITE_BASE     = os.getenv("SITE_BASE", "")          # https://<user>.github.io/<repo>/ or your custom domain
+SITE_BASE     = os.getenv("SITE_BASE", "")          # e.g., https://discountsmokeskc.com/ or GH Pages URL
 
 def fetch_emails():
     with urllib.request.urlopen(SHEETBEST_URL, timeout=30) as r:
@@ -16,20 +16,29 @@ def fetch_emails():
 def latest_post():
     with open("posts/index.json","r",encoding="utf-8") as f:
         idx = json.load(f)
-    if not idx.get("posts"): raise RuntimeError("No posts in index.json")
+    if not idx.get("posts"):
+        raise RuntimeError("No posts in index.json")
     p = idx["posts"][0]
     link = p["url"]
-    if SITE_BASE:
-        if not SITE_BASE.endswith("/"): SITE_BASE += "/"
-        link = SITE_BASE + link
+
+    # ✅ Use a local copy; don't mutate the module-global SITE_BASE
+    site_base = SITE_BASE or ""
+    if site_base:
+        if not site_base.endswith("/"):
+            site_base = site_base + "/"
+        link = site_base + link
+
     return p["title"], p.get("excerpt",""), link
 
 def send_email(to_list, subject, html):
-    msg = f"From: Discount Smokes <{FROM_EMAIL}>\r\n" \
-          f"To: {', '.join(to_list)}\r\n" \
-          f"Subject: {subject}\r\n" \
-          f"MIME-Version: 1.0\r\n" \
-          f"Content-Type: text/html; charset=utf-8\r\n\r\n" + html
+    msg = (
+        f"From: Discount Smokes <{FROM_EMAIL}>\r\n"
+        f"To: {', '.join(to_list)}\r\n"
+        f"Subject: {subject}\r\n"
+        f"MIME-Version: 1.0\r\n"
+        f"Content-Type: text/html; charset=utf-8\r\n\r\n"
+        + html
+    )
     ctx = ssl.create_default_context()
     with smtplib.SMTP("smtp.gmail.com", 587) as s:
         s.starttls(context=ctx)
