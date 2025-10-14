@@ -32,6 +32,15 @@ jobs:
           KEEP_MIN: "20"
         run: |
           python scripts/cleanup_old_posts.py
+      - name: Email subscribers about the new post
+  env:
+    SHEETBEST_URL: ${{ secrets.SHEETBEST_URL }}
+    GMAIL_USER: "1130.westport@gmail.com"
+    GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+    SITE_BASE: "https://<YOUR_USER>.github.io/<YOUR_REPO>/"  # update
+  run: |
+    python scripts/email_subscribers.py
+
       - name: Commit & push
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
