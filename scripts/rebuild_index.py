@@ -11,6 +11,10 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 DRY_RUN = os.getenv("DRY_RUN", "")
 
+# NEW: subscriber endpoint + token (injected into generated HTML)
+SUBSCRIBERS_URL = os.getenv("SUBSCRIBERS_URL", "")      # e.g., https://script.google.com/macros/s/XXXX/exec
+SUBSCRIBERS_TOKEN = os.getenv("SUBSCRIBERS_TOKEN", "")  # your secret token
+
 ROOT = pathlib.Path(".")
 POSTS_DIR = ROOT / "posts"
 HTML_DIR  = POSTS_DIR / "html"
@@ -81,6 +85,70 @@ def unique_html_path(date: datetime.date, slug: str) -> pathlib.Path:
         if not p.exists(): return p
         i += 1
 
+def subscribe_block():
+    """
+    Returns the Subscribe form + script.
+    Uses SUBSCRIBERS_URL and SUBSCRIBERS_TOKEN from env; if missing,
+    shows a helpful message to the user but keeps page working.
+    """
+    # Safely serialize for JS
+    url_js = json.dumps(SUBSCRIBERS_URL)
+    tok_js = json.dumps(SUBSCRIBERS_TOKEN)
+    disabled_msg = ""
+    if not SUBSCRIBERS_URL or not SUBSCRIBERS_TOKEN:
+        disabled_msg = "<div style='color:#ef4444;font-size:12px;margin-top:6px'>Subscribe service not configured.</div>"
+
+    return f"""
+<!-- Subscribe (footer) -->
+<section class="container" style="max-width:1080px;margin:24px auto 8px;padding:0 16px;">
+  <form id="subscribe-form" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+    <label for="sub-email" style="font-weight:600;">Subscribe for new posts:</label>
+    <input id="sub-email" type="email" required placeholder="you@example.com"
+           style="flex:1;min-width:220px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px"/>
+    <button type="submit" style="padding:10px 14px;border-radius:10px;background:#e63946;color:#fff;border:0;cursor:pointer;">
+      Subscribe
+    </button>
+    <span id="sub-msg" style="font-size:13px;color:#6b7280;"></span>
+  </form>
+  {disabled_msg}
+</section>
+
+<script>
+  const SUBSCRIBE_URL = {url_js};
+  const SUBSCRIBE_TOKEN = {tok_js};
+
+  document.getElementById('subscribe-form')?.addEventListener('submit', async (e) => {{
+    e.preventDefault();
+    const msg = document.getElementById('sub-msg');
+    const input = document.getElementById('sub-email');
+    const email = (input.value || '').trim();
+    if (!SUBSCRIBE_URL || !SUBSCRIBE_TOKEN) {{
+      msg.textContent = 'Subscribe service not configured yet.';
+      return;
+    }}
+    if (!email || !email.includes('@')) {{
+      msg.textContent = 'Please enter a valid email address.';
+      return;
+    }}
+    msg.textContent = 'Saving...';
+    try {{
+      const res = await fetch(SUBSCRIBE_URL + '?action=subscribe&token=' + encodeURIComponent(SUBSCRIBE_TOKEN), {{
+        method: 'POST',
+        headers: {{ 'Content-Type': 'application/json' }},
+        body: JSON.stringify({{ email, source: location.pathname }})
+      }});
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      msg.textContent = data.ok ? 'Subscribed! Check your inbox for updates.' : (data.error || 'Could not subscribe.');
+      if (data.ok) input.value = '';
+    }} catch (err) {{
+      console.error(err);
+      msg.textContent = 'Could not subscribe. Please try again.';
+    }}
+  }});
+</script>
+"""
+
 def wrap_html(title:str, excerpt:str, body_html:str)->str:
     year = datetime.date.today().year
     # Include meta description/excerpt so rebuild can read it later
@@ -134,6 +202,9 @@ def wrap_html(title:str, excerpt:str, body_html:str)->str:
     {body_html}
   </article>
 </main>
+
+{subscribe_block()}
+
 <footer>© {year} Discount Smokes. All Rights Reserved.</footer>
 </body></html>"""
 
