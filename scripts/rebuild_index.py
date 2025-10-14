@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # Combined generator + index rebuilder
 # - Generates ONE new HTML post from posts/topics.json (rotating through topics)
-# - Rebuilds posts/index.json from posts/html/*.html (HTML-only flow)
+# - Rebuilds posts/index.json from posts/html/*.html (HTML-only)
 # - Injects footer Subscribe form using Sheet.best (SHEETBEST_URL env)
 
 import os, json, datetime, re, pathlib, textwrap, sys
+import html as html_lib
 
 try:
     import requests
@@ -124,12 +125,14 @@ def subscribe_block():
 
 def wrap_html(title:str, excerpt:str, body_html:str)->str:
     year = datetime.date.today().year
+    title_esc   = html_lib.escape(title,   quote=True)
+    excerpt_esc = html_lib.escape(excerpt, quote=True)
     return f"""<!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>{title} — Discount Smokes</title>
-<meta name="description" content="{excerpt}"/>
-<meta name="excerpt" content="{excerpt}"/>
+<title>{title_esc} — Discount Smokes</title>
+<meta name="description" content="{excerpt_esc}"/>
+<meta name="excerpt" content="{excerpt_esc}"/>
 <link rel="icon" href="../../assets/favicon.svg"/>
 <style>
   body{{background:#fff;color:#111;margin:0;font-family:Arial,Helvetica,sans-serif}}
@@ -237,16 +240,17 @@ Write a 350-500 word blog post for Discount Smokes (1130 Westport Rd, Kansas Cit
     excerpt = m.group(1).strip() if m else "Stop by Discount Smokes in Westport for friendly help and new arrivals."
 
     # Write HTML page
-    body_html = f"<h1>{title}</h1>\n" + markdown_to_html(content_md)
+    title_h1 = html_lib.escape(title, quote=False)  # safe for <h1>
+    body_html = f"<h1>{title_h1}</h1>\n" + markdown_to_html(content_md)
     slug = slugify(title)
     html_path = unique_html_path(today, slug)
     html_path.write_text(wrap_html(title, excerpt, body_html), encoding="utf-8")
 
-    # Insert into index.json (at top)
+    # Insert into index.json (at top) — store the raw (unescaped) title exactly as in topics.json
     idx = json.loads(INDEX_PATH.read_text(encoding="utf-8"))
     idx.setdefault("posts", [])
     idx["posts"].insert(0, {
-        "title": title,                               # topics.json title
+        "title": title,
         "date": f"{today:%Y-%m-%d}",
         "url": f"posts/html/{html_path.name}",
         "excerpt": excerpt,
@@ -266,15 +270,17 @@ def strip_tags(s: str) -> str:
 
 def extract_title(html: str, fallback: str) -> str:
     m = TITLE_RE.search(html)
-    return strip_tags(m.group(1)) if m else fallback
+    raw = strip_tags(m.group(1)) if m else fallback
+    return html_lib.unescape(raw)  # ✅ ensure raw text (matches topics.json)
 
 def extract_excerpt(html: str, fallback: str) -> str:
     m = EXCERPT_RE.search(html)
     if m:
-        return m.group(1).strip()
+        return html_lib.unescape(m.group(1).strip())
     pm = re.search(r"<p[^>]*>(.*?)</p>", html, re.I | re.S)
     if pm:
         t = strip_tags(pm.group(1))
+        t = html_lib.unescape(t)
         return (t[:180] + "…") if len(t) > 180 else t
     return fallback
 
