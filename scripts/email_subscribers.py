@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 import os, json, smtplib, ssl, urllib.request, re
 
-SHEETBEST_URL = os.getenv("SHEETBEST_URL")
+SHEETBEST_URL = os.getenv("SHEETBEST_URL")          # Sheet.best endpoint
 FROM_EMAIL    = os.getenv("GMAIL_USER")             # 1130.westport@gmail.com
-APP_PASSWORD  = os.getenv("GMAIL_APP_PASSWORD")
-SITE_BASE     = os.getenv("SITE_BASE", "")          # optional, for web links if needed
+APP_PASSWORD  = os.getenv("GMAIL_APP_PASSWORD")     # Gmail App Password
+SITE_BASE     = os.getenv("SITE_BASE", "")          # Optional: public base URL if you need absolute links
 
-# Store links here for clarity
+# Contact / social links
 CALL_TEL = "tel:+18167121130"
 DIR_LINK = "https://www.google.com/maps?q=1130+Westport+Rd,+Kansas+City,+MO+64111"
 FB_LINK  = "https://www.facebook.com/TrippinSmokeandVape/"
@@ -22,30 +22,27 @@ def fetch_emails():
                     for row in rows if "@" in str(row.get("email","")) })
 
 def latest_post():
-    # read latest entry from index.json and return the local path to the HTML file
     with open("posts/index.json","r",encoding="utf-8") as f:
         idx = json.load(f)
     if not idx.get("posts"):
         raise RuntimeError("No posts in index.json")
-
     p = idx["posts"][0]
-    rel_url = p["url"]  # e.g. posts/html/2025-01-15-slug.html
+    rel_url = p["url"]  # e.g., posts/html/2025-01-15-slug.html
     local_path = rel_url.replace("/", os.sep)
-    # For subject/title we trust index.json (now equals topics.json title)
+    # Title already equals topics.json title (set by generator)
     return p["title"], local_path
 
 def read_article_html(local_path: str) -> str:
-    """Return inner HTML of <article class='post'>...</article> or whole file if not found."""
+    """Return inner HTML of <article class='post'>...</article> or a fallback."""
     try:
         with open(local_path, "r", encoding="utf-8") as f:
             html = f.read()
     except Exception:
         return "<p>Blog content could not be loaded.</p>"
-
     m = ARTICLE_RE.search(html)
     if m:
         return m.group(1).strip()
-    return html  # fallback: entire file
+    return html  # fallback: whole file
 
 def send_email(to_list, subject, html):
     msg = (
@@ -71,7 +68,7 @@ def main():
     title, local_path = latest_post()
     body_inner_html = read_article_html(local_path)
 
-    # Build full email HTML (no "Read the post" button, include contact links + socials)
+    # Full email (no "Read the post" button; include contact links + socials)
     html = f"""
       <div style="font-family:Arial,Helvetica,sans-serif;line-height:1.55;">
         <h2 style="margin:0 0 10px;color:#e63946;">{title}</h2>
@@ -95,7 +92,7 @@ def main():
       </div>
     """
 
-    subject = f"Discount Smokes - {title}"  # ✅ use topics.json title
+    subject = f"Discount Smokes - {title}"
     send_email(subs, subject, html)
     print(f"Emailed {len(subs)} subscribers")
 
