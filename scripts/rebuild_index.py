@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-# Combined generator + index rebuilder
-# - Generates ONE new HTML post from posts/topics.json (rotating through topics)
-# - Rebuilds posts/index.json from posts/html/*.html (HTML-only)
-# - Injects footer Subscribe form using Sheet.best (SHEETBEST_URL env)
+# Generates ONE new HTML post using posts/topics.json (rotating through topics),
+# rebuilds posts/index.json from posts/html/*.html (HTML-only),
+# and injects the footer Subscribe form (Sheet.best).
 
 import os, json, datetime, re, pathlib, textwrap, sys
 import html as html_lib
@@ -18,7 +17,7 @@ except Exception:
 OPENAI_API_KEY  = os.getenv("OPENAI_API_KEY")
 OPENAI_MODEL    = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 DRY_RUN         = os.getenv("DRY_RUN", "")
-SHEETBEST_URL   = os.getenv("SHEETBEST_URL", "").strip()  # Sheet.best endpoint
+SHEETBEST_URL   = os.getenv("SHEETBEST_URL", "").strip()  # Sheet.best subscribers endpoint
 
 ROOT       = pathlib.Path(".")
 POSTS_DIR  = ROOT / "posts"
@@ -74,7 +73,7 @@ def markdown_to_html(md_text:str)->str:
     return md.markdown(md_text, extensions=["extra"])
 
 def subscribe_block():
-    # JS treats any 2xx as success; Sheet.best returns inserted rows (array), not {ok:true}
+    # Any 2xx from Sheet.best is success
     url_js = json.dumps(SHEETBEST_URL)
     note = "" if SHEETBEST_URL else "<div style='color:#ef4444;font-size:12px;margin-top:6px'>Subscribe service not configured.</div>"
     return f"""
@@ -111,7 +110,7 @@ def subscribe_block():
         const txt = await res.text().catch(() => '');
         throw new Error(`HTTP ${{res.status}}${{txt ? ': ' + txt : ''}}`);
       }}
-      msg.textContent = 'Subscribed! Check your inbox for updates.';
+      msg.textContent = 'Thank you for subscribing.';   // <<< updated success message
       emailEl.value = '';
     }} catch (err) {{
       console.error('Subscribe failed:', err);
@@ -210,8 +209,8 @@ def gen_with_openai(prompt:str)->str:
     r.raise_for_status()
     return r.json()["choices"][0]["message"]["content"]
 
+# ====== Generate one post (title EXACTLY topics.json) ======
 def generate_one_post():
-    """Generate ONE post (HTML) and update posts/index.json by inserting newest entry at top."""
     ensure_structure()
     topics = read_topics()
     today  = datetime.date.today()
@@ -219,7 +218,6 @@ def generate_one_post():
     i = get_next_index(len(topics))
     topic = topics[i]
     category = topic.get("category", "General")
-    # ✅ Always use the exact title from topics.json
     title = (topic.get("title") or topic.get("idea") or "Store update").strip()
     idea  = topic.get("idea") or topic.get("title") or "Store update"
 
@@ -239,14 +237,14 @@ Write a 350-500 word blog post for Discount Smokes (1130 Westport Rd, Kansas Cit
     m = re.search(r"Excerpt:\s*(.+)", content_md, re.IGNORECASE)
     excerpt = m.group(1).strip() if m else "Stop by Discount Smokes in Westport for friendly help and new arrivals."
 
-    # Write HTML page
-    title_h1 = html_lib.escape(title, quote=False)  # safe for <h1>
+    # HTML page
+    title_h1 = html_lib.escape(title, quote=False)
     body_html = f"<h1>{title_h1}</h1>\n" + markdown_to_html(content_md)
     slug = slugify(title)
     html_path = unique_html_path(today, slug)
     html_path.write_text(wrap_html(title, excerpt, body_html), encoding="utf-8")
 
-    # Insert into index.json (at top) — store the raw (unescaped) title exactly as in topics.json
+    # Update index.json with EXACT title
     idx = json.loads(INDEX_PATH.read_text(encoding="utf-8"))
     idx.setdefault("posts", [])
     idx["posts"].insert(0, {
@@ -261,20 +259,20 @@ Write a 350-500 word blog post for Discount Smokes (1130 Westport Rd, Kansas Cit
     bump_index(i, len(topics))
     print(f"[generate] Wrote HTML post: {html_path}")
 
-# ====== Index rebuild (HTML-only) ======
-TITLE_RE   = re.compile(r"<h1[^>]*>(.*?)</h1>", re.I | re.S)
-EXCERPT_RE = re.compile(r'<meta\s+name=["\']excerpt["\']\s+content=["\'](.*?)["\']', re.I)
+# ====== Index rebuild (title = <h1> inside <article>) ======
+TITLE_IN_ARTICLE_RE = re.compile(r"<article[^>]*class=['\"]post['\"][^>]*>.*?<h1[^>]*>(.*?)</h1>", re.I | re.S)
+EXCERPT_META_RE     = re.compile(r'<meta\s+name=["\']excerpt["\']\s+content=["\'](.*?)["\']', re.I)
 
 def strip_tags(s: str) -> str:
     return re.sub(r"<[^>]+>", "", s or "").strip()
 
-def extract_title(html: str, fallback: str) -> str:
-    m = TITLE_RE.search(html)
+def extract_title_from_article(html: str, fallback: str) -> str:
+    m = TITLE_IN_ARTICLE_RE.search(html)
     raw = strip_tags(m.group(1)) if m else fallback
-    return html_lib.unescape(raw)  # ✅ ensure raw text (matches topics.json)
+    return html_lib.unescape(raw)
 
 def extract_excerpt(html: str, fallback: str) -> str:
-    m = EXCERPT_RE.search(html)
+    m = EXCERPT_META_RE.search(html)
     if m:
         return html_lib.unescape(m.group(1).strip())
     pm = re.search(r"<p[^>]*>(.*?)</p>", html, re.I | re.S)
@@ -306,7 +304,7 @@ def rebuild_index():
             continue
 
         fallback_title = re.sub(r"\.html$", "", name).split("-", 3)[-1].replace("-", " ").title()
-        title = extract_title(html, fallback_title)
+        title   = extract_title_from_article(html, fallback_title)
         excerpt = extract_excerpt(html, "Stop by Discount Smokes in Westport for friendly help and new arrivals.")
 
         entries.append({
@@ -323,7 +321,6 @@ def rebuild_index():
 
 # ====== Main ======
 def main():
-    # 1) Generate one post
     try:
         generate_one_post()
     except SystemExit:
@@ -331,7 +328,6 @@ def main():
     except Exception as e:
         print(f"[generate] ERROR: {e}", file=sys.stderr)
 
-    # 2) Rebuild index from all existing HTML files
     try:
         rebuild_index()
     except Exception as e:
