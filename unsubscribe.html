@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Unsubscribe — Discount Smokes</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; margin: 0; background: #fff; color: #111; }
+    header, footer { background:#000; color:#fff; padding:10px 0; }
+    .container { max-width: 720px; margin: 0 auto; padding: 0 16px; }
+    .card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:16px; margin:18px 0; }
+    a { color:#e63946; text-decoration: none; }
+    .muted { color:#6b7280; }
+    button { background:#e63946;color:#fff;border:0;padding:10px 14px;border-radius:10px;cursor:pointer; }
+    input, textarea, select { width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:10px; }
+    .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  </style>
+</head>
+<body>
+  <header><div class="container">
+    <h1 style="font-size:18px;margin:0;">Discount Smokes — Unsubscribe</h1>
+  </div></header>
+
+  <main class="container">
+    <div class="card">
+      <p id="status" class="muted">Processing your request…</p>
+      <div id="form" style="display:none;">
+        <p>If you’d like, tell us why you’re unsubscribing:</p>
+        <textarea id="reason" rows="3" placeholder="Optional"></textarea>
+        <div class="row" style="margin-top:10px;">
+          <button id="btn">Confirm Unsubscribe</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer><div class="container">
+    <p style="margin:0;">© <span id="yr"></span> Discount Smokes</p>
+  </div></footer>
+
+<script>
+  document.getElementById('yr').textContent = new Date().getFullYear();
+
+  const params = new URLSearchParams(location.search);
+  const email = (params.get('e') || '').trim().toLowerCase();
+  const token = (params.get('t') || '').trim();
+
+  // TODO: replace with your unsubscribes tab endpoint (private sheet via Sheet.best)
+  const UNSUB_URL = 'https://api.sheetbest.com/sheets/REPLACE-THIS-WITH-YOUR-UUID/tabs/unsubscribes';
+
+  const statusEl = document.getElementById('status');
+  const formEl   = document.getElementById('form');
+  const btn      = document.getElementById('btn');
+
+  function invalid(msg) {
+    statusEl.textContent = msg;
+    statusEl.className = '';
+    formEl.style.display = 'none';
+  }
+
+  if (!email || !token) {
+    invalid('Missing unsubscribe link parameters.');
+  } else {
+    statusEl.textContent = 'We found your subscription. Click to confirm.';
+    formEl.style.display = 'block';
+  }
+
+  btn?.addEventListener('click', async () => {
+    const reason = document.getElementById('reason').value.trim();
+    statusEl.textContent = 'Saving...';
+    try {
+      const payload = [{ email, token, reason, date: new Date().toISOString() }];
+      const res = await fetch(UNSUB_URL, {
+        method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      statusEl.textContent = 'You have been unsubscribed. Sorry to see you go!';
+      formEl.style.display = 'none';
+    } catch (e) {
+      console.error(e);
+      statusEl.textContent = 'Could not complete unsubscribe. Please try again later.';
+    }
+  });
+</script>
+</body>
+</html>
