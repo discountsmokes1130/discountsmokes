@@ -55,7 +55,45 @@
     </section>
   </main>
 
-  <footer>© 2025 Discount Smokes. All Rights Reserved.</footer>
+  <footer> <!-- Subscribe (footer) -->
+<section class="container" style="max-width:1080px;margin:24px auto 8px;padding:0 16px;">
+  <form id="subscribe-form" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+    <label for="sub-email" style="font-weight:600;">Subscribe for new posts:</label>
+    <input id="sub-email" type="email" required placeholder="you@example.com"
+           style="flex:1;min-width:220px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px"/>
+    <button type="submit" style="padding:10px 14px;border-radius:10px;background:#e63946;color:#fff;border:0;cursor:pointer;">
+      Subscribe
+    </button>
+    <span id="sub-msg" style="font-size:13px;color:#374151;"></span>
+  </form>
+</section>
+
+<script>
+  // Replace with your Apps Script endpoint (Step C)
+  const SUBSCRIBE_URL = 'https://script.google.com/macros/s/PASTE_YOUR_DEPLOYED_APPS_SCRIPT_URL/exec';
+  const SUBSCRIBE_TOKEN = 'PASTE_A_RANDOM_SECRET_TOKEN';
+
+  document.getElementById('subscribe-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('sub-email').value.trim();
+    const msg = document.getElementById('sub-msg');
+    msg.textContent = 'Saving...';
+    try {
+      const res = await fetch(SUBSCRIBE_URL + '?action=subscribe&token=' + encodeURIComponent(SUBSCRIBE_TOKEN), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, source: location.pathname })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      msg.textContent = data.ok ? 'Subscribed! Check your inbox for updates.' : (data.error || 'Could not subscribe.');
+    } catch (err) {
+      console.error(err);
+      msg.textContent = 'Could not subscribe. Please try again.';
+    }
+  });
+</script>
+© 2025 Discount Smokes. All Rights Reserved.</footer>
 
   <script>
     async function loadPosts() {
