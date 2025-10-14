@@ -216,9 +216,10 @@ def generate_one_post():
     i = get_next_index(len(topics))
     topic = topics[i]
     category = topic.get("category", "General")
-    idea     = topic.get("idea") or topic.get("title") or "Store update"
+    # ✅ Always use the exact title from topics.json
+    title = (topic.get("title") or topic.get("idea") or "Store update").strip()
+    idea  = topic.get("idea") or topic.get("title") or "Store update"
 
-    title_prompt = f"Create a catchy 6-10 word blog title about: {topic.get('title', idea)}"
     content_prompt = f"""
 Write a 350-500 word blog post for Discount Smokes (1130 Westport Rd, Kansas City, MO) about: {idea}.
 - Avoid medical claims or health promises.
@@ -229,8 +230,6 @@ Write a 350-500 word blog post for Discount Smokes (1130 Westport Rd, Kansas Cit
 - Category: {category}
 """.strip()
 
-    # Title + Content
-    title = gen_with_openai(title_prompt).strip().splitlines()[0].replace('"',"") or f"{category} Update"
     content_md = gen_with_openai(content_prompt)
 
     # Excerpt
@@ -247,7 +246,7 @@ Write a 350-500 word blog post for Discount Smokes (1130 Westport Rd, Kansas Cit
     idx = json.loads(INDEX_PATH.read_text(encoding="utf-8"))
     idx.setdefault("posts", [])
     idx["posts"].insert(0, {
-        "title": title,
+        "title": title,                               # topics.json title
         "date": f"{today:%Y-%m-%d}",
         "url": f"posts/html/{html_path.name}",
         "excerpt": excerpt,
@@ -321,11 +320,9 @@ def main():
     # 1) Generate one post
     try:
         generate_one_post()
-    except SystemExit as se:
-        # Missing topics or structure — surface and stop
+    except SystemExit:
         raise
     except Exception as e:
-        # Log error but continue to rebuild index (so site stays consistent)
         print(f"[generate] ERROR: {e}", file=sys.stderr)
 
     # 2) Rebuild index from all existing HTML files
