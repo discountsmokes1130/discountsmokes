@@ -1,76 +1,83 @@
----
 name: Auto Blog
+
 on:
   schedule:
-    - cron: 0 16 * * *
+    - cron: "0 16 * * *"   # 16:00 UTC
   workflow_dispatch: {}
+
 permissions:
   contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: "pip"
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install requests markdown
+
       - name: Generate new blog post and rebuild index
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_MODEL: gpt-4o-mini
-          SHEETBEST_URL: ${{ secrets.SHEETBEST_URL }}
+          SHEETBEST_URL: ${{ secrets.SHEETBEST_URL }}          # okay to keep if your scripts use it
         run: |
+          set -e
           python scripts/rebuild_index.py
+
       - name: Cleanup posts older than 60 days
         env:
           CUTOFF_DAYS: "60"
           KEEP_MIN: "20"
         run: |
+          set -e
           python scripts/cleanup_old_posts.py
+
       - name: Email subscribers about the new post
         continue-on-error: true
         env:
           SHEETBEST_URL: ${{ secrets.SHEETBEST_URL }}
           SHEETBEST_UNSUB_URL: ${{ secrets.SHEETBEST_UNSUB_URL }}
           UNSUBSCRIBE_SECRET: ${{ secrets.UNSUBSCRIBE_SECRET }}
-          GMAIL_USER: 1130.westport@gmail.com
+          GMAIL_USER: "1130.westport@gmail.com"
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-          SITE_BASE: https://discountsmokeskc.com/
+          SITE_BASE: "https://discountsmokeskc.com/"
         run: |
           python scripts/email_subscribers.py
+
       - name: Inject subscribe secrets into HTML
-        run: >
+        env:
+          SUBSCRIBE_ENDPOINT: ${{ secrets.SUBSCRIBE_ENDPOINT }}
+          GOOGLE_FORMS_ENTRY_ID: ${{ secrets.GOOGLE_FORMS_ENTRY_ID }}
+        run: |
           set -e
-
-          echo "SUBSCRIBE_ENDPOINT=${{ secrets.SUBSCRIBE_ENDPOINT }}"
-
           # Replace placeholders in all HTML files (home, blog, and generated post pages)
-
           find . -type f -name "*.html" -print0 | xargs -0 sed -i \
+            -e "s#{{SUBSCRIBE_ENDPOINT}}#${SUBSCRIBE_ENDPOINT}#g" \
+            -e "s#{{GOOGLE_FORMS_ENTRY_ID}}#${GOOGLE_FORMS_ENTRY_ID}#g"
 
-          -e 's#{{SUBSCRIBE_ENDPOINT}}#${{ secrets.SUBSCRIBE_ENDPOINT }}#g' \
+          # Sanity checks (don’t print secrets)
+          if grep -R "{{SUBSCRIBE_ENDPOINT}}" -- *.html posts/html 2>/dev/null; then
+            echo "ERROR: SUBSCRIBE_ENDPOINT placeholder still present." >&2
+            exit 1
+          fi
 
-          -e 's#{{GOOGLE_FORMS_ENTRY_ID}}#${{ secrets.GOOGLE_FORMS_ENTRY_ID }}#g'
-
-           # Sanity check: show one file that should contain the injected URL
-           grep -n "https://script.google.com\|https://docs.google.com/forms" index.html || true
-           grep -n "https://script.google.com\|https://docs.google.com/forms" blog.html || true
       - name: Commit & push updates
-        run: >
+        run: |
+          set -e
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
-
           git config user.name "github-actions[bot]"
-
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
           git add -A
-
-          git commit -m "chore(blog): auto post + rebuild + cleanup + email" || echo "No changes to commit"
-
+          git commit -m "chore(blog): auto post + rebuild + cleanup + email + inject" || echo "No changes to commit"
           git push
