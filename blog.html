@@ -69,9 +69,9 @@
 </section>
 
 <script>
-  // Replace with your Apps Script endpoint (Step C)
-  const SUBSCRIBE_URL = 'https://api.sheetbest.com/sheets/9b9631d4-d5b7-45dc-922f-a2182b7dbcb8';
-  const SUBSCRIBE_TOKEN = 'PASTE_A_RANDOM_SECRET_TOKEN';
+  // This value will be injected by GitHub Actions at build time
+  const SUBSCRIBE_URL = "{{ SHEETBEST_URL }}"; // Placeholder to be replaced by your workflow
+  const SUBSCRIBE_TOKEN = 'DISCOUNT_SMOKES_SECURE_TOKEN'; // optional internal check
 
   document.getElementById('subscribe-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -85,14 +85,17 @@
         body: JSON.stringify({ email, source: location.pathname })
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
-      msg.textContent = data.ok ? 'Subscribed! Check your inbox for updates.' : (data.error || 'Could not subscribe.');
+      const data = await res.json().catch(() => ({}));
+      msg.textContent = data.ok
+        ? 'Thank you for subscribe.'
+        : (data.error || 'Could not subscribe.');
     } catch (err) {
       console.error(err);
       msg.textContent = 'Could not subscribe. Please try again.';
     }
   });
 </script>
+
 © 2025 Discount Smokes. All Rights Reserved.</footer>
 
   <script>
