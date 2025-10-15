@@ -11,7 +11,7 @@
   <header>
     <div class="container header-inner">
       <div class="brand">
-        <a href="index.html">
+        <a href="index.html" aria-label="Home">
           <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 360" role="img" aria-label="Discount Smokes logo">
             <defs><style>.t{font:700 90px Arial, Helvetica, sans-serif}</style></defs>
             <rect width="1080" height="360" fill="none"/>
@@ -80,7 +80,7 @@
             <div class="content"><h3>Detox</h3><p>Quick-clean options and kits. Ask staff for details.</p><span class="tag">Drinks</span><span class="tag">Kits</span></div>
           </div>
           <div class="feature">
-            <div class="photo"><img src="assets/photo-70h.png" alt="70H Hydroxy" /></div>
+            <div class="photo"><img src="assets/photo-70h.png" alt="Gummies" /></div>
             <div class="content"><h3>Gummies</h3><p>Select Gummies available in-store. Inquire for current availability.</p><span class="tag">Gummies</span></div>
           </div>
         </div>
@@ -119,52 +119,104 @@
             </a>
           </div>
         </section>
-        <aside class="card map"><iframe loading="lazy" allowfullscreen src="https://www.google.com/maps?q=1130%20Westport%20Rd%2C%20Kansas%20City%2C%20MO%2064111&output=embed"></iframe></aside>
+        <aside class="card map">
+          <iframe loading="lazy" allowfullscreen src="https://www.google.com/maps?q=1130%20Westport%20Rd%2C%20Kansas%20City%2C%20MO%2064111&output=embed"></iframe>
+        </aside>
       </div>
     </div>
   </main>
 
-  <footer> <!-- Subscribe (footer) -->
-<section class="container" style="max-width:1080px;margin:24px auto 8px;padding:0 16px;">
-  <form id="subscribe-form" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-    <label for="sub-email" style="font-weight:600;">Subscribe for new posts:</label>
-    <input id="sub-email" type="email" required placeholder="you@example.com"
-           style="flex:1;min-width:220px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px"/>
-    <button type="submit" style="padding:10px 14px;border-radius:10px;background:#e63946;color:#fff;border:0;cursor:pointer;">
-      Subscribe
-    </button>
-    <span id="sub-msg" style="font-size:13px;color:#374151;"></span>
-  </form>
-</section>
+  <footer>
+    <!-- Subscribe (footer) -->
+    <section class="container" style="max-width:1080px;margin:24px auto 8px;padding:0 16px;">
+      <form id="subscribe-form" class="subscribe-form" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <label for="sub-email" style="font-weight:600;">Subscribe for new posts:</label>
+        <input id="sub-email" name="email" type="email" required placeholder="you@example.com"
+               style="flex:1;min-width:220px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px"/>
+        <button type="submit" style="padding:10px 14px;border-radius:10px;background:#e63946;color:#fff;border:0;cursor:pointer;">
+          Subscribe
+        </button>
+        <span id="sub-msg" class="subscribe-msg" style="font-size:13px;color:#374151;"></span>
+      </form>
+    </section>
 
-<script>
-  // This value will be injected by GitHub Actions at build time
-  const SUBSCRIBE_URL = "{{ SHEETBEST_URL }}"; // Placeholder to be replaced by your workflow
-  const SUBSCRIBE_TOKEN = 'DISCOUNT_SMOKES_SECURE_TOKEN'; // optional internal check
+    <!-- Endpoint placeholders are injected by GitHub Actions; do NOT hardcode secrets -->
+    <script>
+      // Placeholders replaced during CI:
+      // - SUBSCRIBE_ENDPOINT: Apps Script /exec OR Google Forms /formResponse
+      // - GOOGLE_FORMS_ENTRY_ID: only for Google Forms
+      const SUBSCRIBE_ENDPOINT = "{{SUBSCRIBE_ENDPOINT}}";
+      const GOOGLE_FORMS_ENTRY_ID = "{{GOOGLE_FORMS_ENTRY_ID}}"; // keep empty if not using Forms
 
-  document.getElementById('subscribe-form')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('sub-email').value.trim();
-    const msg = document.getElementById('sub-msg');
-    msg.textContent = 'Saving...';
-    try {
-      const res = await fetch(SUBSCRIBE_URL + '?action=subscribe&token=' + encodeURIComponent(SUBSCRIBE_TOKEN), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, source: location.pathname })
-      });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json().catch(() => ({}));
-      msg.textContent = data.ok
-        ? 'Thank you for subscribe.'
-        : (data.error || 'Could not subscribe.');
-    } catch (err) {
-      console.error(err);
-      msg.textContent = 'Could not subscribe. Please try again.';
-    }
-  });
-</script>
+      async function submitSubscribe(form) {
+        const msg = form.querySelector(".subscribe-msg") || document.getElementById("sub-msg");
+        const emailEl = form.querySelector('input[name="email"]') || document.getElementById("sub-email");
+        const email = (emailEl?.value || "").trim();
 
-© 2025 Discount Smokes. All Rights Reserved.</footer>
+        if (!SUBSCRIBE_ENDPOINT || SUBSCRIBE_ENDPOINT.includes("{{SUBSCRIBE_ENDPOINT}}")) {
+          if (msg) msg.textContent = "Subscribe service not configured.";
+          return;
+        }
+        if (!email || !email.includes("@")) {
+          if (msg) msg.textContent = "Please enter a valid email.";
+          return;
+        }
+
+        if (msg) msg.textContent = "Saving...";
+
+        const isForms = /docs\.google\.com\/forms\/.+\/formResponse/i.test(SUBSCRIBE_ENDPOINT);
+
+        try {
+          if (isForms) {
+            if (!GOOGLE_FORMS_ENTRY_ID || GOOGLE_FORMS_ENTRY_ID.includes("{{GOOGLE_FORMS_ENTRY_ID}}")) {
+              if (msg) msg.textContent = "Subscribe form not configured.";
+              return;
+            }
+            const fd = new FormData();
+            fd.append(GOOGLE_FORMS_ENTRY_ID, email);
+            // Optional mapping if your Form has extra fields:
+            // fd.append("entry.ABCDEF", new Date().toISOString());
+            // fd.append("entry.GHIJKL", location.pathname);
+
+            // Google Forms requires no-cors; response is opaque → treat as success
+            await fetch(SUBSCRIBE_ENDPOINT, { method: "POST", mode: "no-cors", body: fd });
+            if (msg) msg.textContent = "Thank you for subscribe.";
+            if (emailEl) emailEl.value = "";
+            return;
+          }
+
+          // Apps Script JSON endpoint — treat any 2xx as success
+          const payload = { action: "subscribe", email, date: new Date().toISOString(), source: location.pathname };
+          const res = await fetch(SUBSCRIBE_ENDPOINT, {
+            method: "POST",
+            mode: "cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+
+          if (res.ok) {
+            if (msg) msg.textContent = "Thank you for subscribe.";
+            if (emailEl) emailEl.value = "";
+            return;
+          }
+
+          const txt = await res.text().catch(() => "");
+          console.error("Subscribe non-2xx:", res.status, txt);
+          if (msg) msg.textContent = "Could not subscribe. Please try again.";
+        } catch (err) {
+          console.error("Subscribe failed:", err);
+          if (msg) msg.textContent = "Could not subscribe. Please try again.";
+        }
+      }
+
+      (function wireSubscribe() {
+        document.querySelectorAll("form.subscribe-form, form#subscribe-form").forEach(form => {
+          form.addEventListener("submit", (e) => { e.preventDefault(); submitSubscribe(form); });
+        });
+      })();
+    </script>
+
+    © 2025 Discount Smokes. All Rights Reserved.
+  </footer>
 </body>
 </html>
