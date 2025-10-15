@@ -114,15 +114,15 @@
     </section>
 
     <script>
-      const SUBSCRIBE_ENDPOINT = "{{SUBSCRIBE_ENDPOINT}}";
-      const GOOGLE_FORMS_ENTRY_ID = "{{GOOGLE_FORMS_ENTRY_ID}}"; // blank if not using Forms
+      const SUBSCRIBE_ENDPOINT = "https://docs.google.com/spreadsheets/d/1mLIAJGszY4nEdpTcdJ9T_B_K08eVp4_GZd-rL_eEMfU/edit?gid=0#gid=0/formresponse";
+      const GOOGLE_FORMS_ENTRY_ID = ""; // blank if not using Forms
 
       async function submitSubscribe(form) {
         const msg = form.querySelector(".subscribe-msg") || document.getElementById("sub-msg");
         const emailEl = form.querySelector('input[name="email"]');
         const email = (emailEl?.value || "").trim();
 
-        if (!SUBSCRIBE_ENDPOINT || SUBSCRIBE_ENDPOINT.includes("{{SUBSCRIBE_ENDPOINT}}")) {
+        if (!SUBSCRIBE_ENDPOINT || SUBSCRIBE_ENDPOINT.includes("https://docs.google.com/spreadsheets/d/1mLIAJGszY4nEdpTcdJ9T_B_K08eVp4_GZd-rL_eEMfU/edit?gid=0#gid=0/formresponse")) {
           msg.textContent = "Subscribe service not configured.";
           return;
         }
@@ -136,7 +136,7 @@
 
         try {
           if (isForms) {
-            if (!GOOGLE_FORMS_ENTRY_ID || GOOGLE_FORMS_ENTRY_ID.includes("{{GOOGLE_FORMS_ENTRY_ID}}")) {
+            if (!GOOGLE_FORMS_ENTRY_ID || GOOGLE_FORMS_ENTRY_ID.includes("")) {
               msg.textContent = "Subscribe form not configured.";
               return;
             }
