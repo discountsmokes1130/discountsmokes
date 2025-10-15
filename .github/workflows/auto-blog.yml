@@ -69,7 +69,7 @@ jobs:
           echo "Sending subscriber emails..."
           python scripts/email_subscribers.py
 
-      # Step 7: Inject Google subscription secrets into HTML
+      # Step 7: Inject Google subscription secrets into HTML (with safe escaping)
       - name: Inject subscribe secrets into HTML
         env:
           SUBSCRIBE_ENDPOINT: ${{ secrets.SUBSCRIBE_ENDPOINT }}
@@ -77,13 +77,19 @@ jobs:
         run: |
           set -e
           echo "Injecting subscribe endpoint secrets into HTML files..."
-          
-          # Replace placeholder tags in all HTML files
-          find . -type f -name "*.html" -print0 | xargs -0 sed -i \
-            -e "s#{{SUBSCRIBE_ENDPOINT}}#${SUBSCRIBE_ENDPOINT}#g" \
-            -e "s#{{GOOGLE_FORMS_ENTRY_ID}}#${GOOGLE_FORMS_ENTRY_ID}#g"
 
-          # Verify that placeholders were replaced
+          # Escape values for sed replacement (escape | and & which can break s||| )
+          esc() { printf '%s' "$1" | sed -e 's/[|&]/\\&/g'; }
+
+          SE="$(esc "$SUBSCRIBE_ENDPOINT")"
+          GFEI="$(esc "$GOOGLE_FORMS_ENTRY_ID")"
+
+          # Replace placeholders in all HTML files (home, blog, and generated post pages)
+          find . -type f -name "*.html" -print0 | xargs -0 sed -i \
+            -e "s|{{SUBSCRIBE_ENDPOINT}}|$SE|g" \
+            -e "s|{{GOOGLE_FORMS_ENTRY_ID}}|$GFEI|g"
+
+          # Verify that placeholders were replaced (don’t print secrets)
           if grep -R "{{SUBSCRIBE_ENDPOINT}}" -- *.html posts/html 2>/dev/null; then
             echo "❌ ERROR: SUBSCRIBE_ENDPOINT placeholder still present." >&2
             exit 1
