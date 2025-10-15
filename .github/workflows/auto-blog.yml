@@ -44,6 +44,13 @@ jobs:
           SITE_BASE: https://discountsmokeskc.com/
         run: |
           python scripts/email_subscribers.py
+      - name: Inject subscribe secrets into HTML
+        run: >
+          find . -type f -name "*.html" -print0 | xargs -0 sed -i \
+
+          -e 's#{{SUBSCRIBE_ENDPOINT}}#${{ secrets.SUBSCRIBE_ENDPOINT }}#g' \
+
+          -e 's#{{GOOGLE_FORMS_ENTRY_ID}}#${{ secrets.GOOGLE_FORMS_ENTRY_ID }}#g'
       - name: Commit & push updates
         run: >
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
