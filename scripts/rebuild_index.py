@@ -73,8 +73,8 @@ def markdown_to_html(md_text:str)->str:
     return md.markdown(md_text, extensions=["extra"])
 
 def subscribe_block():
-    # Any 2xx from Sheet.best is success
-    url_js = json.dumps(SHEETBEST_URL)
+    # Embed the Sheet.best URL into pages at build time
+    url_js = json.dumps(SHEETBEST_URL or "")
     note = "" if SHEETBEST_URL else "<div style='color:#ef4444;font-size:12px;margin-top:6px'>Subscribe service not configured.</div>"
     return f"""
 <section class="container" style="max-width:1080px;margin:24px auto 8px;padding:0 16px;">
@@ -91,34 +91,41 @@ def subscribe_block():
 </section>
 <script>
   const SHEETBEST_URL = {url_js};
+
   async function subscribeHandler(e) {{
     e.preventDefault();
     const emailEl = document.getElementById('sub-email');
     const msg = document.getElementById('sub-msg');
     const email = (emailEl.value || '').trim();
+
     if (!SHEETBEST_URL) {{ msg.textContent='Subscribe service not configured.'; return; }}
     if (!email || !email.includes('@')) {{ msg.textContent='Please enter a valid email.'; return; }}
+
     msg.textContent='Saving...';
     try {{
-      const payload = [{{ email, date: new Date().toISOString(), source: location.pathname }}];
+      const payload = {{ email, date: new Date().toISOString(), source: location.pathname }};
       const res = await fetch(SHEETBEST_URL, {{
         method: 'POST',
+        mode: 'cors',
         headers: {{ 'Content-Type': 'application/json' }},
         body: JSON.stringify(payload)
       }});
-      // Treat ANY 2xx as success
+
       if (res.status >= 200 && res.status < 300) {{
         msg.textContent = 'Thank you for subscribe.';
         emailEl.value = '';
         return;
       }}
+
       const txt = await res.text().catch(() => '');
-      throw new Error(`HTTP ${{res.status}}${{txt ? ': ' + txt : ''}}`);
+      console.error('Subscribe error:', res.status, txt);
+      msg.textContent = 'Could not subscribe. Please try again.';
     }} catch (err) {{
       console.error('Subscribe failed:', err);
       msg.textContent = 'Could not subscribe. Please try again.';
     }}
   }}
+
   const form = document.getElementById('subscribe-form');
   if (form) form.addEventListener('submit', subscribeHandler);
 </script>
