@@ -106,12 +106,14 @@ def subscribe_block():
         headers: {{ 'Content-Type': 'application/json' }},
         body: JSON.stringify(payload)
       }});
-      if (!res.ok) {{
-        const txt = await res.text().catch(() => '');
-        throw new Error(`HTTP ${{res.status}}${{txt ? ': ' + txt : ''}}`);
+      // Treat ANY 2xx as success
+      if (res.status >= 200 && res.status < 300) {{
+        msg.textContent = 'Thank you for subscribe.';
+        emailEl.value = '';
+        return;
       }}
-      msg.textContent = 'Thank you for subscribing.';   // <<< updated success message
-      emailEl.value = '';
+      const txt = await res.text().catch(() => '');
+      throw new Error(`HTTP ${{res.status}}${{txt ? ': ' + txt : ''}}`);
     }} catch (err) {{
       console.error('Subscribe failed:', err);
       msg.textContent = 'Could not subscribe. Please try again.';
