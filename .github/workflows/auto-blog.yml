@@ -46,11 +46,21 @@ jobs:
           python scripts/email_subscribers.py
       - name: Inject subscribe secrets into HTML
         run: >
+          set -e
+
+          echo "SUBSCRIBE_ENDPOINT=${{ secrets.SUBSCRIBE_ENDPOINT }}"
+
+          # Replace placeholders in all HTML files (home, blog, and generated post pages)
+
           find . -type f -name "*.html" -print0 | xargs -0 sed -i \
 
           -e 's#{{SUBSCRIBE_ENDPOINT}}#${{ secrets.SUBSCRIBE_ENDPOINT }}#g' \
 
           -e 's#{{GOOGLE_FORMS_ENTRY_ID}}#${{ secrets.GOOGLE_FORMS_ENTRY_ID }}#g'
+
+           # Sanity check: show one file that should contain the injected URL
+           grep -n "https://script.google.com\|https://docs.google.com/forms" index.html || true
+           grep -n "https://script.google.com\|https://docs.google.com/forms" blog.html || true
       - name: Commit & push updates
         run: >
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
