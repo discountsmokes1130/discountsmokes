@@ -12,7 +12,7 @@
     a { color:#e63946; text-decoration: none; }
     .muted { color:#6b7280; }
     button { background:#e63946;color:#fff;border:0;padding:10px 14px;border-radius:10px;cursor:pointer; }
-    input, textarea, select { width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:10px; }
+    textarea { width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:10px; }
     .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
   </style>
 </head>
@@ -45,40 +45,43 @@
   const email = (params.get('e') || '').trim().toLowerCase();
   const token = (params.get('t') || '').trim();
 
-  // TODO: replace with your unsubscribes tab endpoint (private sheet via Sheet.best)
+  // >>>>>>>>>>>>>>  REQUIRED: set to your Sheet.best UNSUBSCRIBES tab  <<<<<<<<<<<<<<
+  // Example: https://api.sheetbest.com/sheets/9b9631d4-d5b7-45dc-922f-a2182b7dbcb8/tabs/unsubscribes
   const UNSUB_URL = 'https://api.sheetbest.com/sheets/REPLACE-THIS-WITH-YOUR-UUID/tabs/unsubscribes';
 
   const statusEl = document.getElementById('status');
   const formEl   = document.getElementById('form');
   const btn      = document.getElementById('btn');
 
-  function invalid(msg) {
-    statusEl.textContent = msg;
-    statusEl.className = '';
-    formEl.style.display = 'none';
-  }
+  function show(msg) { statusEl.textContent = msg; statusEl.className = ''; }
+  function invalid(msg) { show(msg); formEl.style.display = 'none'; }
 
   if (!email || !token) {
     invalid('Missing unsubscribe link parameters.');
+  } else if (!UNSUB_URL || UNSUB_URL.includes('REPLACE-THIS-WITH-YOUR-UUID')) {
+    invalid('Unsubscribe service is not configured.');
   } else {
-    statusEl.textContent = 'We found your subscription. Click to confirm.';
+    show('We found your subscription. Click to confirm.');
     formEl.style.display = 'block';
   }
 
   btn?.addEventListener('click', async () => {
     const reason = document.getElementById('reason').value.trim();
-    statusEl.textContent = 'Saving...';
+    show('Saving...');
     try {
       const payload = [{ email, token, reason, date: new Date().toISOString() }];
       const res = await fetch(UNSUB_URL, {
         method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(payload)
       });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      statusEl.textContent = 'You have been unsubscribed. Sorry to see you go!';
-      formEl.style.display = 'none';
+      if (res.status >= 200 && res.status < 300) {
+        show('You have been unsubscribed. Sorry to see you go!');
+        formEl.style.display = 'none';
+        return;
+      }
+      throw new Error('HTTP ' + res.status);
     } catch (e) {
       console.error(e);
-      statusEl.textContent = 'Could not complete unsubscribe. Please try again later.';
+      show('Could not complete unsubscribe. Please try again later.');
     }
   });
 </script>
