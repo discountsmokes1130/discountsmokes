@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-import os, json, smtplib, ssl, urllib.request, urllib.parse, hashlib, re, time
+import os, json, smtplib, ssl, urllib.request, urllib.parse, hashlib, re, time, sys
 
-SHEETBEST_URL      = os.getenv("SHEETBEST_URL")                 # subscribers sheet
-SHEETBEST_UNSUB_URL= os.getenv("SHEETBEST_UNSUB_URL") or (
+SHEETBEST_URL       = os.getenv("SHEETBEST_URL")                 # subscribers tab
+SHEETBEST_UNSUB_URL = os.getenv("SHEETBEST_UNSUB_URL") or (
     (SHEETBEST_URL.rstrip("/") + "/tabs/unsubscribes") if SHEETBEST_URL else None
 )
-UNSUBSCRIBE_SECRET = os.getenv("UNSUBSCRIBE_SECRET", "change-me")
-FROM_EMAIL         = os.getenv("GMAIL_USER")                    # 1130.westport@gmail.com
-APP_PASSWORD       = os.getenv("GMAIL_APP_PASSWORD")
-SITE_BASE          = os.getenv("SITE_BASE", "https://discountsmokeskc.com/")
+UNSUBSCRIBE_SECRET  = os.getenv("UNSUBSCRIBE_SECRET", "change-me")
+FROM_EMAIL          = os.getenv("GMAIL_USER")                    # 1130.westport@gmail.com
+APP_PASSWORD        = os.getenv("GMAIL_APP_PASSWORD")
+SITE_BASE           = os.getenv("SITE_BASE", "https://discountsmokeskc.com/")
 
 CALL_TEL = "tel:+18167121130"
 DIR_LINK = "https://www.google.com/maps?q=1130+Westport+Rd,+Kansas+City,+MO+64111"
@@ -29,6 +29,9 @@ def http_post_json(url, payload):
         return json.loads(r.read().decode("utf-8"))
 
 def fetch_emails():
+    if not SHEETBEST_URL:
+        print("ERROR: SHEETBEST_URL not set", file=sys.stderr)
+        return []
     rows = http_get_json(SHEETBEST_URL)
     return sorted({ str(row.get("email","")).strip().lower()
                     for row in rows if "@" in str(row.get("email","")) })
@@ -47,7 +50,7 @@ def latest_post():
         idx = json.load(f)
     if not idx.get("posts"): raise RuntimeError("No posts in index.json")
     p = idx["posts"][0]
-    return p["title"], p["url"]  # local relative URL to HTML
+    return p["title"], p["url"]  # title equals topics.json title (generator enforces this)
 
 def read_article_body(rel_url: str) -> str:
     local_path = rel_url.replace("/", os.sep)
@@ -66,16 +69,14 @@ def make_token(email: str) -> str:
 
 def unsubscribe_link(email: str) -> str:
     token = make_token(email)
-    # the public unsubscribe page in your repo
     base = SITE_BASE.rstrip("/") + "/unsubscribe.html"
     params = urllib.parse.urlencode({"e": email, "t": token})
     return f"{base}?{params}"
 
 def send_one_email(to_addr: str, subject: str, html_body: str):
-    # Compose headers WITHOUT exposing other recipients
     headers = [
         f"From: Discount Smokes <{FROM_EMAIL}>",
-        f"To: {to_addr}",                           # individual send
+        f"To: {to_addr}",  # individual send so recipients don't see each other
         f"Subject: {subject}",
         "MIME-Version: 1.0",
         "Content-Type: text/html; charset=utf-8",
@@ -90,13 +91,13 @@ def send_one_email(to_addr: str, subject: str, html_body: str):
 def main():
     subs = fetch_emails()
     unsub = fetch_unsubscribed()
-    # Skip unsubscribed
+    # Skip unsubscribed addresses
     send_list = [e for e in subs if e not in unsub]
     if not send_list:
         print("No subscribers to email (or all unsubscribed).")
         return
 
-    title, rel_url = latest_post()   # title already equals topics.json (from generator)
+    title, rel_url = latest_post()
     body_inner_html = read_article_body(rel_url)
 
     for idx, email in enumerate(send_list, start=1):
@@ -132,7 +133,6 @@ def main():
             print(f"Sent {idx}/{len(send_list)} → {email}")
         except Exception as e:
             print(f"ERROR sending to {email}: {e}", file=sys.stderr)
-        # be a good citizen to SMTP — small pause
         time.sleep(0.5)
 
 if __name__ == "__main__":
