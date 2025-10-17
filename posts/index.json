@@ -1,6 +1,13 @@
 {
   "posts": [
     {
+      "title": "Vapes & Disposables: Top Picks",
+      "date": "2025-10-17",
+      "url": "posts/html/2025-10-17-vapes-disposables-top-picks.html",
+      "excerpt": "**",
+      "category": "General"
+    },
+    {
       "title": "Detox (no medical claims): What to Know",
       "date": "2025-10-16",
       "url": "posts/html/2025-10-16-detox-no-medical-claims-what-to-know.html",
@@ -36,16 +43,16 @@
       "category": "General"
     },
     {
-      "title": "Grinders: Teeth Styles",
+      "title": "Hookah & Shisha: Hose Types",
       "date": "2025-10-14",
-      "url": "posts/html/2025-10-14-grinders-teeth-styles.html",
+      "url": "posts/html/2025-10-14-hookah-shisha-hose-types.html",
       "excerpt": "**",
       "category": "General"
     },
     {
-      "title": "Hookah & Shisha: Hose Types",
+      "title": "Grinders: Teeth Styles",
       "date": "2025-10-14",
-      "url": "posts/html/2025-10-14-hookah-shisha-hose-types.html",
+      "url": "posts/html/2025-10-14-grinders-teeth-styles.html",
       "excerpt": "**",
       "category": "General"
     },
@@ -71,17 +78,17 @@
       "category": "General"
     },
     {
-      "title": "Unpacking Kratom: Your Top Questions Answered!",
-      "date": "2025-10-10",
-      "url": "posts/html/2025-10-10-unpacking-kratom-your-top-questions-answered.html",
-      "excerpt": "Excerpt:\nCurious about kratom? This popular herbal product is making waves in the Westport scene. Let\u2019s dive into some common questions to help you understand what kratom is all ab\u2026",
-      "category": "General"
-    },
-    {
       "title": "Vapes & Disposables: Discover Our Top Picks",
       "date": "2025-10-10",
       "url": "posts/html/2025-10-10-vapes-disposables-discover-our-top-picks-17.html",
       "excerpt": "Excerpt:\nDiscover the hottest vapes and disposable options available at Discount Smokes in Westport! Whether you're a beginner or an experienced vaper, we have something for everyo\u2026",
+      "category": "General"
+    },
+    {
+      "title": "Unpacking Kratom: Your Top Questions Answered!",
+      "date": "2025-10-10",
+      "url": "posts/html/2025-10-10-unpacking-kratom-your-top-questions-answered.html",
+      "excerpt": "Excerpt:\nCurious about kratom? This popular herbal product is making waves in the Westport scene. Let\u2019s dive into some common questions to help you understand what kratom is all ab\u2026",
       "category": "General"
     }
   ]
