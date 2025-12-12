@@ -1,6 +1,13 @@
 {
   "posts": [
     {
+      "title": "Cigars & Wraps: Size & Shape 101",
+      "date": "2025-12-12",
+      "url": "posts/html/2025-12-12-cigars-wraps-size-shape-101.html",
+      "excerpt": "**",
+      "category": "General"
+    },
+    {
       "title": "Kratom (no medical claims): Quality Checklist",
       "date": "2025-12-11",
       "url": "posts/html/2025-12-11-kratom-no-medical-claims-quality-checklist.html",
@@ -445,13 +452,6 @@
       "title": "Navigating THC/THCa Compliance: Tips for Staff Conversations",
       "date": "2025-10-13",
       "url": "posts/html/2025-10-13-navigating-thc-thca-compliance-tips-for-staff-conversations.html",
-      "excerpt": "**",
-      "category": "General"
-    },
-    {
-      "title": "Explore the Latest in Cigars and Wraps!",
-      "date": "2025-10-12",
-      "url": "posts/html/2025-10-12-explore-the-latest-in-cigars-and-wraps.html",
       "excerpt": "**",
       "category": "General"
     }
