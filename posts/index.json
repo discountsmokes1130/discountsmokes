@@ -1,6 +1,13 @@
 {
   "posts": [
     {
+      "title": "Grinders: Budget vs Premium",
+      "date": "2025-12-13",
+      "url": "posts/html/2025-12-13-grinders-budget-vs-premium.html",
+      "excerpt": "**",
+      "category": "General"
+    },
+    {
       "title": "Cigars & Wraps: Size & Shape 101",
       "date": "2025-12-12",
       "url": "posts/html/2025-12-12-cigars-wraps-size-shape-101.html",
@@ -445,13 +452,6 @@
       "title": "Hookah & Shisha: Hose Types",
       "date": "2025-10-14",
       "url": "posts/html/2025-10-14-hookah-shisha-hose-types.html",
-      "excerpt": "**",
-      "category": "General"
-    },
-    {
-      "title": "Navigating THC/THCa Compliance: Tips for Staff Conversations",
-      "date": "2025-10-13",
-      "url": "posts/html/2025-10-13-navigating-thc-thca-compliance-tips-for-staff-conversations.html",
       "excerpt": "**",
       "category": "General"
     }
