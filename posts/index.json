@@ -1,6 +1,13 @@
 {
   "posts": [
     {
+      "title": "Cigars & Wraps: Storage Tips",
+      "date": "2025-12-26",
+      "url": "posts/html/2025-12-26-cigars-wraps-storage-tips.html",
+      "excerpt": "**",
+      "category": "General"
+    },
+    {
       "title": "THC/THCa (compliance): Form Factors",
       "date": "2025-12-25",
       "url": "posts/html/2025-12-25-thc-thca-compliance-form-factors.html",
@@ -417,13 +424,6 @@
       "title": "Kratom (no medical claims): What to Look For",
       "date": "2025-10-27",
       "url": "posts/html/2025-10-27-kratom-no-medical-claims-what-to-look-for.html",
-      "excerpt": "**",
-      "category": "General"
-    },
-    {
-      "title": "Vapes & Disposables: Choosing Nic Strength",
-      "date": "2025-10-26",
-      "url": "posts/html/2025-10-26-vapes-disposables-choosing-nic-strength.html",
       "excerpt": "**",
       "category": "General"
     }
