@@ -1,6 +1,13 @@
 {
   "posts": [
     {
+      "title": "Cigars & Wraps: Budget Cigars",
+      "date": "2026-01-04",
+      "url": "posts/html/2026-01-04-cigars-wraps-budget-cigars.html",
+      "excerpt": "**",
+      "category": "General"
+    },
+    {
       "title": "Gummies (no medical claims): Common Questions",
       "date": "2026-01-03",
       "url": "posts/html/2026-01-03-gummies-no-medical-claims-common-questions.html",
@@ -417,13 +424,6 @@
       "title": "Smoking Accessories: New Arrivals",
       "date": "2025-11-05",
       "url": "posts/html/2025-11-05-smoking-accessories-new-arrivals.html",
-      "excerpt": "**",
-      "category": "General"
-    },
-    {
-      "title": "THC/THCa (compliance): Form Factors",
-      "date": "2025-11-04",
-      "url": "posts/html/2025-11-04-thc-thca-compliance-form-factors.html",
       "excerpt": "**",
       "category": "General"
     }
