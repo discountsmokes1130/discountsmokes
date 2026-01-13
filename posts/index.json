@@ -1,6 +1,13 @@
 {
   "posts": [
     {
+      "title": "Hookah & Shisha: Care & Cleaning",
+      "date": "2026-01-13",
+      "url": "posts/html/2026-01-13-hookah-shisha-care-cleaning.html",
+      "excerpt": "**",
+      "category": "General"
+    },
+    {
       "title": "Detox (no medical claims): Choosing a Product",
       "date": "2026-01-12",
       "url": "posts/html/2026-01-12-detox-no-medical-claims-choosing-a-product.html",
@@ -417,13 +424,6 @@
       "title": "THC/THCa (compliance): How to Ask Staff",
       "date": "2025-11-14",
       "url": "posts/html/2025-11-14-thc-thca-compliance-how-to-ask-staff.html",
-      "excerpt": "**",
-      "category": "General"
-    },
-    {
-      "title": "Vapes & Disposables: Brand Showdown",
-      "date": "2025-11-13",
-      "url": "posts/html/2025-11-13-vapes-disposables-brand-showdown.html",
       "excerpt": "**",
       "category": "General"
     }
