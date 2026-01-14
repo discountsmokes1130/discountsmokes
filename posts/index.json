@@ -1,6 +1,13 @@
 {
   "posts": [
     {
+      "title": "Grinders: Care & Cleaning",
+      "date": "2026-01-14",
+      "url": "posts/html/2026-01-14-grinders-care-cleaning.html",
+      "excerpt": "**",
+      "category": "General"
+    },
+    {
       "title": "Hookah & Shisha: Care & Cleaning",
       "date": "2026-01-13",
       "url": "posts/html/2026-01-13-hookah-shisha-care-cleaning.html",
@@ -417,13 +424,6 @@
       "title": "Hookah & Shisha: Starter Kits",
       "date": "2025-11-15",
       "url": "posts/html/2025-11-15-hookah-shisha-starter-kits.html",
-      "excerpt": "**",
-      "category": "General"
-    },
-    {
-      "title": "THC/THCa (compliance): How to Ask Staff",
-      "date": "2025-11-14",
-      "url": "posts/html/2025-11-14-thc-thca-compliance-how-to-ask-staff.html",
       "excerpt": "**",
       "category": "General"
     }
