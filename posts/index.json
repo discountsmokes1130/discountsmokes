@@ -1,6 +1,13 @@
 {
   "posts": [
     {
+      "title": "Grinders: Popular Brands",
+      "date": "2026-01-20",
+      "url": "posts/html/2026-01-20-grinders-popular-brands.html",
+      "excerpt": "**",
+      "category": "General"
+    },
+    {
       "title": "Vapes & Disposables: Refillable vs Disposable",
       "date": "2026-01-19",
       "url": "posts/html/2026-01-19-vapes-disposables-refillable-vs-disposable.html",
@@ -417,13 +424,6 @@
       "title": "Gummies (no medical claims): What to Expect",
       "date": "2025-11-21",
       "url": "posts/html/2025-11-21-gummies-no-medical-claims-what-to-expect.html",
-      "excerpt": "**",
-      "category": "General"
-    },
-    {
-      "title": "THC/THCa (compliance): Quality Signs",
-      "date": "2025-11-20",
-      "url": "posts/html/2025-11-20-thc-thca-compliance-quality-signs.html",
       "excerpt": "**",
       "category": "General"
     }
