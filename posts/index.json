@@ -1,6 +1,13 @@
 {
   "posts": [
     {
+      "title": "Cigars & Wraps: Popular Wraps",
+      "date": "2026-01-24",
+      "url": "posts/html/2026-01-24-cigars-wraps-popular-wraps.html",
+      "excerpt": "**",
+      "category": "General"
+    },
+    {
       "title": "Kratom (no medical claims): Powders vs Capsules",
       "date": "2026-01-23",
       "url": "posts/html/2026-01-23-kratom-no-medical-claims-powders-vs-capsules.html",
@@ -417,13 +424,6 @@
       "title": "THC/THCa (compliance): Quality Signs",
       "date": "2025-11-25",
       "url": "posts/html/2025-11-25-thc-thca-compliance-quality-signs.html",
-      "excerpt": "**",
-      "category": "General"
-    },
-    {
-      "title": "Smoking Accessories: Gift Guide",
-      "date": "2025-11-24",
-      "url": "posts/html/2025-11-24-smoking-accessories-gift-guide.html",
       "excerpt": "**",
       "category": "General"
     }
