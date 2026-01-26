@@ -1,6 +1,13 @@
 {
   "posts": [
     {
+      "title": "Hookah & Shisha: Shisha Storage",
+      "date": "2026-01-26",
+      "url": "posts/html/2026-01-26-hookah-shisha-shisha-storage.html",
+      "excerpt": "**",
+      "category": "General"
+    },
+    {
       "title": "Vapes & Disposables: Flavor Trends",
       "date": "2026-01-25",
       "url": "posts/html/2026-01-25-vapes-disposables-flavor-trends.html",
@@ -417,13 +424,6 @@
       "title": "Grinders: Budget vs Premium",
       "date": "2025-11-27",
       "url": "posts/html/2025-11-27-grinders-budget-vs-premium.html",
-      "excerpt": "**",
-      "category": "General"
-    },
-    {
-      "title": "Grinders: Popular Brands",
-      "date": "2025-11-26",
-      "url": "posts/html/2025-11-26-grinders-popular-brands.html",
       "excerpt": "**",
       "category": "General"
     }
