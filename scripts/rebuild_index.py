@@ -18,7 +18,7 @@ except Exception:
 OPENAI_API_KEY  = os.getenv("OPENAI_API_KEY")
 OPENAI_MODEL    = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 DRY_RUN         = os.getenv("DRY_RUN", "")
-SHEETBEST_URL   = os.getenv("SHEETBEST_URL", "").strip()  # Sheet.best subscribers endpoint
+SHEETBEST_URL   = os.getenv("SHEETBEST_URL", "").strip()
 
 ROOT       = pathlib.Path(".")
 POSTS_DIR  = ROOT / "posts"
@@ -43,8 +43,6 @@ def ensure_structure():
         log(f"[init] Created {INDEX_PATH}")
     if not TOPICS.exists():
         raise SystemExit("ERROR: posts/topics.json not found.")
-    if not TOPICS.is_file():
-        raise SystemExit("ERROR: posts/topics.json is not a file.")
 
 def read_topics():
     data = json.loads(TOPICS.read_text(encoding="utf-8"))
@@ -86,155 +84,117 @@ def unique_html_path(date: datetime.date, slug: str) -> pathlib.Path:
 def markdown_to_html(md_text:str)->str:
     return md.markdown(md_text, extensions=["extra"])
 
-# ====== Subscribe block (footer) ======
+# ====== Subscribe block ======
 def subscribe_block():
-    # Embed the Sheet.best URL into pages at build time
     url_js = json.dumps(SHEETBEST_URL or "")
     note = "" if SHEETBEST_URL else "<div style='color:#ef4444;font-size:12px;margin-top:6px'>Subscribe service not configured.</div>"
     return f"""
 <section class="container" style="max-width:1080px;margin:24px auto 8px;padding:0 16px;">
-  <form id="subscribe-form" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-    <label for="sub-email" style="font-weight:600;">Subscribe for new posts:</label>
-    <input id="sub-email" type="email" required placeholder="you@example.com"
-           style="flex:1;min-width:220px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px"/>
-    <button type="submit" style="padding:10px 14px;border-radius:10px;background:#e63946;color:#fff;border:0;cursor:pointer;">
-      Subscribe
-    </button>
-    <span id="sub-msg" style="font-size:13px;color:#6b7280;"></span>
-  </form>
-  {note}
+<form id="subscribe-form" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+<label for="sub-email" style="font-weight:600;">Subscribe for new posts:</label>
+<input id="sub-email" type="email" required placeholder="you@example.com"
+style="flex:1;min-width:220px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px"/>
+<button type="submit" style="padding:10px 14px;border-radius:10px;background:#e63946;color:#fff;border:0;cursor:pointer;">
+Subscribe
+</button>
+<span id="sub-msg" style="font-size:13px;color:#6b7280;"></span>
+</form>
+{note}
 </section>
-<script>
-  const SHEETBEST_URL = {url_js};
-
-  async function subscribeHandler(e) {{
-    e.preventDefault();
-    const emailEl = document.getElementById('sub-email');
-    const msg = document.getElementById('sub-msg');
-    const email = (emailEl.value || '').trim();
-
-    if (!SHEETBEST_URL) {{ msg.textContent='Subscribe service not configured.'; return; }}
-    if (!email || !email.includes('@')) {{ msg.textContent='Please enter a valid email.'; return; }}
-
-    msg.textContent='Saving...';
-    try {{
-      const payload = {{ email, date: new Date().toISOString(), source: location.pathname }};
-      const res = await fetch(SHEETBEST_URL, {{
-        method: 'POST',
-        mode: 'cors',
-        headers: {{ 'Content-Type': 'application/json' }},
-        body: JSON.stringify(payload)
-      }});
-
-      if (res.status >= 200 && res.status < 300) {{
-        msg.textContent = 'Thank you for subscribe.';
-        emailEl.value = '';
-        return;
-      }}
-
-      const txt = await res.text().catch(() => '');
-      console.error('Subscribe error:', res.status, txt);
-      msg.textContent = 'Could not subscribe. Please try again.';
-    }} catch (err) {{
-      console.error('Subscribe failed:', err);
-      msg.textContent = 'Could not subscribe. Please try again.';
-    }}
-  }}
-
-  const form = document.getElementById('subscribe-form');
-  if (form) form.addEventListener('submit', subscribeHandler);
-</script>
 """
 
-# ====== HTML wrapper for generated posts ======
+# ====== HTML wrapper ======
 def wrap_html(title:str, excerpt:str, body_html:str)->str:
     year = datetime.date.today().year
-    title_esc   = html_lib.escape(title,   quote=True)
+    title_esc   = html_lib.escape(title, quote=True)
     excerpt_esc = html_lib.escape(excerpt, quote=True)
+
     return f"""<!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>{title_esc} — Discount Smokes</title>
 <meta name="description" content="{excerpt_esc}"/>
 <meta name="excerpt" content="{excerpt_esc}"/>
-<link rel="icon" href="../../assets/favicon.svg"/>
-<style>
-  body{{background:#fff;color:#111;margin:0;font-family:Arial,Helvetica,sans-serif}}
-  header{{background:#000;color:#fff}}
-  .container{{max-width:1080px;margin:0 auto;padding:0 16px}}
-  .header-inner{{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;padding:10px 0}}
-  .brand a{{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none}}
-  .logo{{height:42px;width:auto;display:block}}
-  .site-title{{margin:0;font-size:18px;line-height:1;color:#fff}}
-  .top-contact{{display:flex;align-items:center;gap:10px;flex-wrap:wrap}}
-  .top-contact a{{color:#fff;text-decoration:none;font-size:13px;padding:6px 10px;border-radius:8px}}
-  .top-contact a:hover{{color:#e63946}}
-  main.container{{padding:18px 0}}
-  article.post{{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:18px;box-shadow:0 8px 18px rgba(0,0,0,.04)}}
-  article.post h1{{margin-top:0}}
-  article.post img{{max-width:100%;height:auto;border-radius:8px}}
-  footer{{background:#000;color:#fff;text-align:center;padding:10px 0;margin-top:20px;font-size:14px}}
-</style>
-</head><body>
-<header><div class="container header-inner">
-  <div class="brand">
-    <a href="../../index.html" aria-label="Home">
-      <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 360" role="img" aria-label="Discount Smokes logo">
-        <defs><style>.t{{font:700 90px Arial, Helvetica, sans-serif}}</style></defs>
-        <rect width="1080" height="360" fill="none"/>
-        <text x="40" y="160" class="t" fill="#e63946">DISCOUNT</text>
-        <text x="40" y="260" class="t" fill="#ffffff" fill-opacity="0.9">SMOKES</text>
-      </svg>
-      <h1 class="site-title">Discount Smokes</h1>
-    </a>
-  </div>
-  <nav class="top-contact" aria-label="Primary">
-    <a href="../../index.html">🏠 Home</a>
-    <a href="mailto:1130.westport@gmail.com">✉️ Contact Us</a>
-    <a href="tel:+18167121130">📞 Call Now</a>
-    <a href="https://www.google.com/maps?q=1130+Westport+Rd,+Kansas+City,+MO+64111" target="_blank">📍 Directions</a>
-    <a href="../../blog.html">📰 Blog</a>
-  </nav>
-</div></header>
-
-<main class="container">
-  <article class="post">
-    {body_html}
-  </article>
+</head>
+<body>
+<main>
+<article class="post">
+{body_html}
+</article>
 </main>
-
 {subscribe_block()}
-
 <footer>© {year} Discount Smokes. All Rights Reserved.</footer>
-</body></html>"""
+</body>
+</html>"""
 
-# ====== FREE fallback post generator (NO OpenAI needed) ======
+# ====== 600–800 WORD SALES-FOCUSED FALLBACK ======
 def gen_fallback_post(title: str, idea: str, category: str) -> str:
-    # Creates clean markdown with Excerpt + headings, 350-500 words-ish
-    # No medical claims.
+    store = "Discount Smokes"
+    address = "1130 Westport Rd, Kansas City, MO 64111"
+
     return textwrap.dedent(f"""
-    Excerpt: {title} — quick, friendly info from Discount Smokes in Westport (Kansas City).
+Excerpt: Looking for {idea} in Westport, Kansas City? Here’s what you should know before you buy.
 
-    ## What to know
-    Here’s a simple, no-stress breakdown on **{idea}**. We keep things straightforward and locally relevant for Westport shoppers. Inventory can change day-to-day, so if you’re looking for something specific, the quickest move is to call us or stop in.
+## {title}
 
-    ## Tips before you buy
-    - **Ask what’s new today:** We get fresh items regularly, and staff can point you to current favorites.
-    - **Check sizes and options:** Many items come in multiple sizes, styles, or variants.
-    - **Stay within local rules:** We keep things compliant and can answer store-level questions.
-    - **Don’t overthink it:** If you’re unsure, tell us what you like and we’ll recommend something that matches your style.
+If you're shopping for **{idea}** in Kansas City, especially around Westport, you’ve probably noticed there are a lot of options available. Online listings can be overwhelming, and product descriptions don’t always tell the full story. That’s why many local customers prefer to stop by **{store}** in person — to compare options, ask questions, and make a confident decision.
 
-    ## Westport note
-    If you’re already in the neighborhood, it’s easy to swing by and compare options in person. We’re located at **1130 Westport Rd, Kansas City, MO 64111**.
+At our Westport location, we focus on helping customers find the right match for their preferences and budget. We keep our approach simple: clear information, helpful guidance, and straightforward answers. No hype — just practical advice.
 
-    **Visit Discount Smokes today.** 21+ for nicotine purchases. Call us for current stock and availability.
-    """).strip()
+### Why Buying In-Store Makes a Difference
 
-# ====== OpenAI generation WITH automatic fallback ======
+Shopping locally gives you advantages that online stores simply can’t offer:
+
+- You can compare products side by side.
+- You can ask about what’s popular right now.
+- You can see size, packaging, and presentation in person.
+- You avoid waiting for shipping or dealing with returns.
+
+Most customers appreciate being able to make a decision immediately instead of guessing from a product page.
+
+### What to Consider Before You Buy {idea}
+
+When selecting {idea}, here are a few important factors:
+
+1. **Quality & Packaging** – Clean presentation and consistent packaging often reflect attention to detail.
+2. **Size & Format** – Choose something that fits your usage and comfort level.
+3. **Value for Money** – The most expensive option isn’t always the best one.
+4. **Availability** – Inventory changes regularly, so it helps to check what’s in stock.
+
+If you’re unsure what fits your needs best, our team can guide you quickly. Just explain what you’re looking for and what you want to avoid.
+
+### Local Kansas City Advantage
+
+Being located at **{address}**, we serve customers from all over Kansas City. Westport shoppers often stop by while they’re already in the area, making it convenient and quick.
+
+If you're planning to visit specifically for {idea}, calling ahead can save time and confirm availability. That way you know exactly what to expect when you walk in.
+
+### Simple Tips That Help Customers
+
+- Bring a photo if you’re replacing something specific.
+- Ask what’s new this week — inventory rotates often.
+- Compare two options before deciding.
+- If you’re new, start simple and adjust later.
+
+These small steps make a big difference in choosing the right product.
+
+### Visit Discount Smokes Today
+
+If you’re in Kansas City and looking for **{idea}**, stop by and see what’s available today. We’re happy to answer questions and help you compare options without pressure.
+
+📍 {address}  
+📞 Call to check availability before visiting  
+🗺 Easy access in the heart of Westport  
+
+**21+ only. Valid ID required for nicotine purchases.**
+""").strip()
+
+# ====== OpenAI WITH AUTO FALLBACK ======
 def gen_with_openai_or_fallback(prompt: str, title: str, idea: str, category: str) -> str:
-    # Forced fallback
     if DRY_RUN or not OPENAI_API_KEY:
-        warn("[openai] DRY_RUN enabled OR OPENAI_API_KEY missing -> FALLBACK content.")
+        warn("[openai] fallback mode")
         return gen_fallback_post(title, idea, category)
 
     url = "https://api.openai.com/v1/chat/completions"
@@ -242,39 +202,24 @@ def gen_with_openai_or_fallback(prompt: str, title: str, idea: str, category: st
     body = {
         "model": OPENAI_MODEL,
         "messages": [
-            {"role": "system", "content": "You write concise, friendly, accurate posts for Discount Smokes (Westport, KC). Avoid medical claims."},
+            {"role": "system", "content": "Write a 600-800 word SEO blog for Discount Smokes in Kansas City. Avoid medical claims."},
             {"role": "user", "content": prompt}
         ],
         "temperature": 0.7,
-        "max_tokens": 700
+        "max_tokens": 1000
     }
-
-    log(f"[openai] Requesting model={OPENAI_MODEL} (key present={bool(OPENAI_API_KEY)})")
 
     try:
         r = requests.post(url, headers=headers, json=body, timeout=90)
-
-        # If OpenAI quota/billing is the problem, fallback instead of failing
-        if r.status_code == 429 and "insufficient_quota" in (r.text or ""):
-            warn("[openai] insufficient_quota -> FALLBACK MODE (no OpenAI)")
+        if r.status_code != 200:
+            warn("[openai] non-200 -> fallback")
             return gen_fallback_post(title, idea, category)
-
-        if r.status_code >= 400:
-            warn(f"[openai] HTTP {r.status_code}: {(r.text or '')[:500]}")
-            # Fallback for any non-2xx
-            warn("[openai] non-2xx -> FALLBACK MODE")
-            return gen_fallback_post(title, idea, category)
-
-        data = r.json()
-        content = data["choices"][0]["message"]["content"]
-        log("[openai] ✅ Generated content with OpenAI.")
-        return content
-
-    except Exception as e:
-        warn(f"[openai] Exception -> FALLBACK MODE: {e}")
+        return r.json()["choices"][0]["message"]["content"]
+    except Exception:
+        warn("[openai] exception -> fallback")
         return gen_fallback_post(title, idea, category)
 
-# ====== Generate one post (title EXACTLY topics.json) ======
+# ====== Generate One Post ======
 def generate_one_post():
     ensure_structure()
     topics = read_topics()
@@ -283,40 +228,30 @@ def generate_one_post():
     i = get_next_index(len(topics))
     topic = topics[i]
 
-    category = (topic.get("category", "General") or "General").strip()
-    title = (topic.get("title") or topic.get("idea") or "Store update").strip()
-    idea  = topic.get("idea") or topic.get("title") or "Store update"
+    category = topic.get("category", "General")
+    title = topic.get("title") or topic.get("idea") or "Store update"
+    idea  = topic.get("idea") or title
 
     log(f"[topic] total={len(topics)} current_index={i}")
-    log(f"[topic] title(from topics.json)='{title}' category='{category}'")
-    log(f"[topic] idea='{idea}'")
 
     content_prompt = f"""
-Write a 350-500 word blog post for Discount Smokes (1130 Westport Rd, Kansas City, MO) about: {idea}.
-- Avoid medical claims or health promises.
-- Friendly, helpful tone. Keep it locally relevant to Westport.
-- Start with a 1-2 sentence excerpt labeled 'Excerpt:'
-- Include 1-2 markdown subheadings.
-- End with a brief invite to visit the shop (21+ for nicotine purchases).
-- Category: {category}
-""".strip()
+Write a 600-800 word blog post about {idea}.
+Friendly tone. Local to Kansas City Westport.
+Avoid medical claims.
+Start with Excerpt:
+"""
 
-    # OpenAI or Fallback
-    content_md = gen_with_openai_or_fallback(content_prompt, title=title, idea=idea, category=category)
+    content_md = gen_with_openai_or_fallback(content_prompt, title, idea, category)
 
-    # Excerpt
     m = re.search(r"Excerpt:\s*(.+)", content_md, re.IGNORECASE)
-    excerpt = m.group(1).strip() if m else "Stop by Discount Smokes in Westport for friendly help and new arrivals."
+    excerpt = m.group(1).strip() if m else "Visit Discount Smokes in Westport."
 
-    # HTML page
-    title_h1 = html_lib.escape(title, quote=False)
-    body_html = f"<h1>{title_h1}</h1>\n" + markdown_to_html(content_md)
+    body_html = f"<h1>{html_lib.escape(title)}</h1>\n" + markdown_to_html(content_md)
 
     slug = slugify(title)
     html_path = unique_html_path(today, slug)
     html_path.write_text(wrap_html(title, excerpt, body_html), encoding="utf-8")
 
-    # Update index.json with EXACT title
     idx = json.loads(INDEX_PATH.read_text(encoding="utf-8"))
     idx.setdefault("posts", [])
     idx["posts"].insert(0, {
@@ -329,103 +264,38 @@ Write a 350-500 word blog post for Discount Smokes (1130 Westport Rd, Kansas Cit
     INDEX_PATH.write_text(json.dumps(idx, indent=2), encoding="utf-8")
 
     bump_index(i, len(topics))
-    log(f"[generate] ✅ Wrote HTML post: {html_path}")
-    log(f"[generate] ✅ Updated index.json with newest post title='{title}'")
+    log(f"[generate] Wrote {html_path}")
 
-# ====== Index rebuild (title = <h1> inside <article>) ======
-TITLE_IN_ARTICLE_RE = re.compile(r"<article[^>]*class=['\"]post['\"][^>]*>.*?<h1[^>]*>(.*?)</h1>", re.I | re.S)
-EXCERPT_META_RE     = re.compile(r'<meta\s+name=["\']excerpt["\']\s+content=["\'](.*?)["\']', re.I)
-
-def strip_tags(s: str) -> str:
-    return re.sub(r"<[^>]+>", "", s or "").strip()
-
-def extract_title_from_article(html: str, fallback: str) -> str:
-    m = TITLE_IN_ARTICLE_RE.search(html)
-    raw = strip_tags(m.group(1)) if m else fallback
-    return html_lib.unescape(raw)
-
-def extract_excerpt(html: str, fallback: str) -> str:
-    m = EXCERPT_META_RE.search(html)
-    if m:
-        return html_lib.unescape(m.group(1).strip())
-    pm = re.search(r"<p[^>]*>(.*?)</p>", html, re.I | re.S)
-    if pm:
-        t = strip_tags(pm.group(1))
-        t = html_lib.unescape(t)
-        return (t[:180] + "…") if len(t) > 180 else t
-    return fallback
-
-def date_from_filename(name: str) -> str:
-    try:
-        yyyy, mm, dd, _ = name.split("-", 3)
-        return f"{yyyy}-{mm}-{dd}"
-    except Exception:
-        return datetime.date.today().isoformat()
-
+# ====== Rebuild Index ======
 def rebuild_index():
-    POSTS_DIR.mkdir(parents=True, exist_ok=True)
-    HTML_DIR.mkdir(parents=True, exist_ok=True)
-
     files = sorted(list(HTML_DIR.glob("*.html")))
-    log(f"[rebuild] Found {len(files)} HTML files in {HTML_DIR}")
-
     entries = []
+
     for file in files:
         name = file.name
-        date_iso = date_from_filename(name)
-        try:
-            html = file.read_text(encoding="utf-8", errors="replace")
-        except Exception as e:
-            warn(f"[rebuild] Skipping {name}: {e}")
-            continue
-
-        fallback_title = re.sub(r"\.html$", "", name).split("-", 3)[-1].replace("-", " ").title()
-        title   = extract_title_from_article(html, fallback_title)
-        excerpt = extract_excerpt(html, "Stop by Discount Smokes in Westport for friendly help and new arrivals.")
-
+        date_iso = name[:10]
+        html = file.read_text(encoding="utf-8", errors="replace")
+        title_match = re.search(r"<h1>(.*?)</h1>", html)
+        title = title_match.group(1) if title_match else name
         entries.append({
             "title": title,
             "date": date_iso,
             "url": f"posts/html/{name}",
-            "excerpt": excerpt,
+            "excerpt": "",
             "category": "General"
         })
 
     entries.sort(key=lambda e: e["date"], reverse=True)
     INDEX_PATH.write_text(json.dumps({"posts": entries}, indent=2), encoding="utf-8")
-    log(f"[rebuild] ✅ Wrote {INDEX_PATH} with {len(entries)} HTML posts")
+    log("[rebuild] done")
 
 # ====== Main ======
 def main():
-    # Print environment summary (no secrets)
-    log("[env] OPENAI_API_KEY present=" + str(bool(OPENAI_API_KEY)))
-    log("[env] OPENAI_MODEL=" + str(OPENAI_MODEL))
-    log("[env] DRY_RUN=" + ("1" if DRY_RUN else "0"))
-    log("[env] SHEETBEST_URL configured=" + str(bool(SHEETBEST_URL)))
-
+    log("[env] OPENAI_KEY=" + str(bool(OPENAI_API_KEY)))
     ensure_structure()
-
-    # Generation SHOULD NOT fail for insufficient_quota anymore (fallback handles it)
-    try:
-        generate_one_post()
-    except SystemExit:
-        raise
-    except Exception as e:
-        warn("[generate] ❌ FAILED to generate new post.")
-        warn(f"[generate] Error: {e}")
-        warn("[generate] Traceback:\n" + traceback.format_exc())
-        raise SystemExit(1)
-
-    # Rebuild index (fail only if rebuild itself fails)
-    try:
-        rebuild_index()
-    except Exception as e:
-        warn("[rebuild] ❌ FAILED to rebuild index.json.")
-        warn(f"[rebuild] Error: {e}")
-        warn("[rebuild] Traceback:\n" + traceback.format_exc())
-        raise SystemExit(1)
-
-    log("[done] ✅ Generation + rebuild completed successfully.")
+    generate_one_post()
+    rebuild_index()
+    log("[done] success")
 
 if __name__ == "__main__":
     main()
