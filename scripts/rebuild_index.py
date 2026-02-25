@@ -27,13 +27,14 @@ INDEX_PATH = POSTS_DIR / "index.json"
 TOPICS     = POSTS_DIR / "topics.json"
 STATE      = POSTS_DIR / ".topic_state.json"
 
-# ====== Utilities ======
+# ====== Logging ======
 def log(msg: str):
     print(msg, flush=True)
 
 def warn(msg: str):
     print(msg, file=sys.stderr, flush=True)
 
+# ====== Utilities ======
 def ensure_structure():
     POSTS_DIR.mkdir(parents=True, exist_ok=True)
     HTML_DIR.mkdir(parents=True, exist_ok=True)
@@ -85,6 +86,7 @@ def unique_html_path(date: datetime.date, slug: str) -> pathlib.Path:
 def markdown_to_html(md_text:str)->str:
     return md.markdown(md_text, extensions=["extra"])
 
+# ====== Subscribe block (footer) ======
 def subscribe_block():
     # Embed the Sheet.best URL into pages at build time
     url_js = json.dumps(SHEETBEST_URL or "")
@@ -144,6 +146,7 @@ def subscribe_block():
 </script>
 """
 
+# ====== HTML wrapper for generated posts ======
 def wrap_html(title:str, excerpt:str, body_html:str)->str:
     year = datetime.date.today().year
     title_esc   = html_lib.escape(title,   quote=True)
@@ -205,41 +208,71 @@ def wrap_html(title:str, excerpt:str, body_html:str)->str:
 <footer>© {year} Discount Smokes. All Rights Reserved.</footer>
 </body></html>"""
 
-# ====== OpenAI generation ======
-def gen_with_openai(prompt:str)->str:
+# ====== FREE fallback post generator (NO OpenAI needed) ======
+def gen_fallback_post(title: str, idea: str, category: str) -> str:
+    # Creates clean markdown with Excerpt + headings, 350-500 words-ish
+    # No medical claims.
+    return textwrap.dedent(f"""
+    Excerpt: {title} — quick, friendly info from Discount Smokes in Westport (Kansas City).
+
+    ## What to know
+    Here’s a simple, no-stress breakdown on **{idea}**. We keep things straightforward and locally relevant for Westport shoppers. Inventory can change day-to-day, so if you’re looking for something specific, the quickest move is to call us or stop in.
+
+    ## Tips before you buy
+    - **Ask what’s new today:** We get fresh items regularly, and staff can point you to current favorites.
+    - **Check sizes and options:** Many items come in multiple sizes, styles, or variants.
+    - **Stay within local rules:** We keep things compliant and can answer store-level questions.
+    - **Don’t overthink it:** If you’re unsure, tell us what you like and we’ll recommend something that matches your style.
+
+    ## Westport note
+    If you’re already in the neighborhood, it’s easy to swing by and compare options in person. We’re located at **1130 Westport Rd, Kansas City, MO 64111**.
+
+    **Visit Discount Smokes today.** 21+ for nicotine purchases. Call us for current stock and availability.
+    """).strip()
+
+# ====== OpenAI generation WITH automatic fallback ======
+def gen_with_openai_or_fallback(prompt: str, title: str, idea: str, category: str) -> str:
+    # Forced fallback
     if DRY_RUN or not OPENAI_API_KEY:
-        warn("[openai] DRY_RUN enabled OR OPENAI_API_KEY missing -> generating placeholder content.")
-        return textwrap.dedent("""
-        Excerpt: Visit Discount Smokes in Westport for helpful service and new arrivals.
+        warn("[openai] DRY_RUN enabled OR OPENAI_API_KEY missing -> FALLBACK content.")
+        return gen_fallback_post(title, idea, category)
 
-        ## Placeholder Post
-        This is a placeholder blog post created by automation. Add OPENAI_API_KEY to publish full posts.
-
-        ### Visit Us
-        1130 Westport Rd, Kansas City, MO 64111
-        """).strip()
-
-    url="https://api.openai.com/v1/chat/completions"
-    headers={"Authorization":f"Bearer {OPENAI_API_KEY}","Content-Type":"application/json"}
-    body={
-        "model":OPENAI_MODEL,
-        "messages":[
-            {"role":"system","content":"You write concise, friendly, accurate posts for Discount Smokes (Westport, KC). Avoid medical claims."},
-            {"role":"user","content":prompt}
+    url = "https://api.openai.com/v1/chat/completions"
+    headers = {"Authorization": f"Bearer {OPENAI_API_KEY}", "Content-Type": "application/json"}
+    body = {
+        "model": OPENAI_MODEL,
+        "messages": [
+            {"role": "system", "content": "You write concise, friendly, accurate posts for Discount Smokes (Westport, KC). Avoid medical claims."},
+            {"role": "user", "content": prompt}
         ],
-        "temperature":0.7,"max_tokens":700
+        "temperature": 0.7,
+        "max_tokens": 700
     }
 
     log(f"[openai] Requesting model={OPENAI_MODEL} (key present={bool(OPENAI_API_KEY)})")
-    r = requests.post(url, headers=headers, json=body, timeout=90)
 
-    # Log response summary BEFORE raising
-    if r.status_code >= 400:
-        warn(f"[openai] HTTP {r.status_code}: {r.text[:500]}")
-    r.raise_for_status()
+    try:
+        r = requests.post(url, headers=headers, json=body, timeout=90)
 
-    data = r.json()
-    return data["choices"][0]["message"]["content"]
+        # If OpenAI quota/billing is the problem, fallback instead of failing
+        if r.status_code == 429 and "insufficient_quota" in (r.text or ""):
+            warn("[openai] insufficient_quota -> FALLBACK MODE (no OpenAI)")
+            return gen_fallback_post(title, idea, category)
+
+        if r.status_code >= 400:
+            warn(f"[openai] HTTP {r.status_code}: {(r.text or '')[:500]}")
+            # Fallback for any non-2xx
+            warn("[openai] non-2xx -> FALLBACK MODE")
+            return gen_fallback_post(title, idea, category)
+
+        data = r.json()
+        content = data["choices"][0]["message"]["content"]
+        log("[openai] ✅ Generated content with OpenAI.")
+        return content
+
+    except Exception as e:
+        warn(f"[openai] Exception -> FALLBACK MODE: {e}")
+        return gen_fallback_post(title, idea, category)
 
 # ====== Generate one post (title EXACTLY topics.json) ======
 def generate_one_post():
@@ -268,7 +301,8 @@ Write a 350-500 word blog post for Discount Smokes (1130 Westport Rd, Kansas Cit
 - Category: {category}
 """.strip()
 
-    content_md = gen_with_openai(content_prompt)
+    # OpenAI or Fallback
+    content_md = gen_with_openai_or_fallback(content_prompt, title=title, idea=idea, category=category)
 
     # Excerpt
     m = re.search(r"Excerpt:\s*(.+)", content_md, re.IGNORECASE)
@@ -371,7 +405,7 @@ def main():
 
     ensure_structure()
 
-    # --- IMPORTANT: Fail the workflow if generation fails ---
+    # Generation SHOULD NOT fail for insufficient_quota anymore (fallback handles it)
     try:
         generate_one_post()
     except SystemExit:
@@ -382,7 +416,7 @@ def main():
         warn("[generate] Traceback:\n" + traceback.format_exc())
         raise SystemExit(1)
 
-    # Rebuild index (also fail if rebuild fails)
+    # Rebuild index (fail only if rebuild itself fails)
     try:
         rebuild_index()
     except Exception as e:
