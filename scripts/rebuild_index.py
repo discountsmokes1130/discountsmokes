@@ -5,6 +5,7 @@
 
 import os, json, datetime, re, pathlib, textwrap, sys
 import html as html_lib
+import traceback
 
 try:
     import requests
@@ -27,13 +28,22 @@ TOPICS     = POSTS_DIR / "topics.json"
 STATE      = POSTS_DIR / ".topic_state.json"
 
 # ====== Utilities ======
+def log(msg: str):
+    print(msg, flush=True)
+
+def warn(msg: str):
+    print(msg, file=sys.stderr, flush=True)
+
 def ensure_structure():
     POSTS_DIR.mkdir(parents=True, exist_ok=True)
     HTML_DIR.mkdir(parents=True, exist_ok=True)
     if not INDEX_PATH.exists():
         INDEX_PATH.write_text(json.dumps({"posts": []}, indent=2), encoding="utf-8")
+        log(f"[init] Created {INDEX_PATH}")
     if not TOPICS.exists():
         raise SystemExit("ERROR: posts/topics.json not found.")
+    if not TOPICS.is_file():
+        raise SystemExit("ERROR: posts/topics.json is not a file.")
 
 def read_topics():
     data = json.loads(TOPICS.read_text(encoding="utf-8"))
@@ -46,7 +56,7 @@ def get_next_index(total:int)->int:
     if STATE.exists():
         try:
             i = int(json.loads(STATE.read_text(encoding="utf-8")).get("next_index", 0))
-        except:
+        except Exception:
             i = 0
     else:
         i = 0
@@ -54,6 +64,7 @@ def get_next_index(total:int)->int:
 
 def bump_index(i:int,total:int):
     STATE.write_text(json.dumps({"next_index": (i+1)%total}, indent=2), encoding="utf-8")
+    log(f"[topic] next_index -> {(i+1)%total}")
 
 def slugify(s:str)->str:
     s = s.lower()
@@ -62,11 +73,13 @@ def slugify(s:str)->str:
 
 def unique_html_path(date: datetime.date, slug: str) -> pathlib.Path:
     base = HTML_DIR / f"{date:%Y-%m-%d}-{slug}.html"
-    if not base.exists(): return base
+    if not base.exists():
+        return base
     i = 1
     while True:
         p = HTML_DIR / f"{date:%Y-%m-%d}-{slug}-{i}.html"
-        if not p.exists(): return p
+        if not p.exists():
+            return p
         i += 1
 
 def markdown_to_html(md_text:str)->str:
@@ -195,6 +208,7 @@ def wrap_html(title:str, excerpt:str, body_html:str)->str:
 # ====== OpenAI generation ======
 def gen_with_openai(prompt:str)->str:
     if DRY_RUN or not OPENAI_API_KEY:
+        warn("[openai] DRY_RUN enabled OR OPENAI_API_KEY missing -> generating placeholder content.")
         return textwrap.dedent("""
         Excerpt: Visit Discount Smokes in Westport for helpful service and new arrivals.
 
@@ -204,6 +218,7 @@ def gen_with_openai(prompt:str)->str:
         ### Visit Us
         1130 Westport Rd, Kansas City, MO 64111
         """).strip()
+
     url="https://api.openai.com/v1/chat/completions"
     headers={"Authorization":f"Bearer {OPENAI_API_KEY}","Content-Type":"application/json"}
     body={
@@ -214,9 +229,17 @@ def gen_with_openai(prompt:str)->str:
         ],
         "temperature":0.7,"max_tokens":700
     }
-    r = requests.post(url, headers=headers, json=body, timeout=60)
+
+    log(f"[openai] Requesting model={OPENAI_MODEL} (key present={bool(OPENAI_API_KEY)})")
+    r = requests.post(url, headers=headers, json=body, timeout=90)
+
+    # Log response summary BEFORE raising
+    if r.status_code >= 400:
+        warn(f"[openai] HTTP {r.status_code}: {r.text[:500]}")
     r.raise_for_status()
-    return r.json()["choices"][0]["message"]["content"]
+
+    data = r.json()
+    return data["choices"][0]["message"]["content"]
 
 # ====== Generate one post (title EXACTLY topics.json) ======
 def generate_one_post():
@@ -226,9 +249,14 @@ def generate_one_post():
 
     i = get_next_index(len(topics))
     topic = topics[i]
-    category = topic.get("category", "General")
+
+    category = (topic.get("category", "General") or "General").strip()
     title = (topic.get("title") or topic.get("idea") or "Store update").strip()
     idea  = topic.get("idea") or topic.get("title") or "Store update"
+
+    log(f"[topic] total={len(topics)} current_index={i}")
+    log(f"[topic] title(from topics.json)='{title}' category='{category}'")
+    log(f"[topic] idea='{idea}'")
 
     content_prompt = f"""
 Write a 350-500 word blog post for Discount Smokes (1130 Westport Rd, Kansas City, MO) about: {idea}.
@@ -249,6 +277,7 @@ Write a 350-500 word blog post for Discount Smokes (1130 Westport Rd, Kansas Cit
     # HTML page
     title_h1 = html_lib.escape(title, quote=False)
     body_html = f"<h1>{title_h1}</h1>\n" + markdown_to_html(content_md)
+
     slug = slugify(title)
     html_path = unique_html_path(today, slug)
     html_path.write_text(wrap_html(title, excerpt, body_html), encoding="utf-8")
@@ -266,7 +295,8 @@ Write a 350-500 word blog post for Discount Smokes (1130 Westport Rd, Kansas Cit
     INDEX_PATH.write_text(json.dumps(idx, indent=2), encoding="utf-8")
 
     bump_index(i, len(topics))
-    print(f"[generate] Wrote HTML post: {html_path}")
+    log(f"[generate] ✅ Wrote HTML post: {html_path}")
+    log(f"[generate] ✅ Updated index.json with newest post title='{title}'")
 
 # ====== Index rebuild (title = <h1> inside <article>) ======
 TITLE_IN_ARTICLE_RE = re.compile(r"<article[^>]*class=['\"]post['\"][^>]*>.*?<h1[^>]*>(.*?)</h1>", re.I | re.S)
@@ -302,14 +332,17 @@ def rebuild_index():
     POSTS_DIR.mkdir(parents=True, exist_ok=True)
     HTML_DIR.mkdir(parents=True, exist_ok=True)
 
+    files = sorted(list(HTML_DIR.glob("*.html")))
+    log(f"[rebuild] Found {len(files)} HTML files in {HTML_DIR}")
+
     entries = []
-    for file in HTML_DIR.glob("*.html"):
+    for file in files:
         name = file.name
         date_iso = date_from_filename(name)
         try:
             html = file.read_text(encoding="utf-8", errors="replace")
         except Exception as e:
-            print(f"[rebuild] Skipping {name}: {e}", file=sys.stderr)
+            warn(f"[rebuild] Skipping {name}: {e}")
             continue
 
         fallback_title = re.sub(r"\.html$", "", name).split("-", 3)[-1].replace("-", " ").title()
@@ -326,22 +359,39 @@ def rebuild_index():
 
     entries.sort(key=lambda e: e["date"], reverse=True)
     INDEX_PATH.write_text(json.dumps({"posts": entries}, indent=2), encoding="utf-8")
-    print(f"[rebuild] Wrote {INDEX_PATH} with {len(entries)} HTML posts")
+    log(f"[rebuild] ✅ Wrote {INDEX_PATH} with {len(entries)} HTML posts")
 
 # ====== Main ======
 def main():
+    # Print environment summary (no secrets)
+    log("[env] OPENAI_API_KEY present=" + str(bool(OPENAI_API_KEY)))
+    log("[env] OPENAI_MODEL=" + str(OPENAI_MODEL))
+    log("[env] DRY_RUN=" + ("1" if DRY_RUN else "0"))
+    log("[env] SHEETBEST_URL configured=" + str(bool(SHEETBEST_URL)))
+
+    ensure_structure()
+
+    # --- IMPORTANT: Fail the workflow if generation fails ---
     try:
         generate_one_post()
     except SystemExit:
         raise
     except Exception as e:
-        print(f"[generate] ERROR: {e}", file=sys.stderr)
+        warn("[generate] ❌ FAILED to generate new post.")
+        warn(f"[generate] Error: {e}")
+        warn("[generate] Traceback:\n" + traceback.format_exc())
+        raise SystemExit(1)
 
+    # Rebuild index (also fail if rebuild fails)
     try:
         rebuild_index()
     except Exception as e:
-        print(f"[rebuild] ERROR: {e}", file=sys.stderr)
-        raise
+        warn("[rebuild] ❌ FAILED to rebuild index.json.")
+        warn(f"[rebuild] Error: {e}")
+        warn("[rebuild] Traceback:\n" + traceback.format_exc())
+        raise SystemExit(1)
+
+    log("[done] ✅ Generation + rebuild completed successfully.")
 
 if __name__ == "__main__":
     main()
