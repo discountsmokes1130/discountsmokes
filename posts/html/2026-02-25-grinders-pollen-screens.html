@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Grinders: Pollen Screens — Discount Smokes</title>
+<meta name="description" content="Grinders: Pollen Screens — quick, friendly info from Discount Smokes in Westport (Kansas City)."/>
+<meta name="excerpt" content="Grinders: Pollen Screens — quick, friendly info from Discount Smokes in Westport (Kansas City)."/>
+<link rel="icon" href="../../assets/favicon.svg"/>
+<style>
+  body{background:#fff;color:#111;margin:0;font-family:Arial,Helvetica,sans-serif}
+  header{background:#000;color:#fff}
+  .container{max-width:1080px;margin:0 auto;padding:0 16px}
+  .header-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;padding:10px 0}
+  .brand a{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none}
+  .logo{height:42px;width:auto;display:block}
+  .site-title{margin:0;font-size:18px;line-height:1;color:#fff}
+  .top-contact{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .top-contact a{color:#fff;text-decoration:none;font-size:13px;padding:6px 10px;border-radius:8px}
+  .top-contact a:hover{color:#e63946}
+  main.container{padding:18px 0}
+  article.post{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:18px;box-shadow:0 8px 18px rgba(0,0,0,.04)}
+  article.post h1{margin-top:0}
+  article.post img{max-width:100%;height:auto;border-radius:8px}
+  footer{background:#000;color:#fff;text-align:center;padding:10px 0;margin-top:20px;font-size:14px}
+</style>
+</head><body>
+<header><div class="container header-inner">
+  <div class="brand">
+    <a href="../../index.html" aria-label="Home">
+      <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 360" role="img" aria-label="Discount Smokes logo">
+        <defs><style>.t{font:700 90px Arial, Helvetica, sans-serif}</style></defs>
+        <rect width="1080" height="360" fill="none"/>
+        <text x="40" y="160" class="t" fill="#e63946">DISCOUNT</text>
+        <text x="40" y="260" class="t" fill="#ffffff" fill-opacity="0.9">SMOKES</text>
+      </svg>
+      <h1 class="site-title">Discount Smokes</h1>
+    </a>
+  </div>
+  <nav class="top-contact" aria-label="Primary">
+    <a href="../../index.html">🏠 Home</a>
+    <a href="mailto:1130.westport@gmail.com">✉️ Contact Us</a>
+    <a href="tel:+18167121130">📞 Call Now</a>
+    <a href="https://www.google.com/maps?q=1130+Westport+Rd,+Kansas+City,+MO+64111" target="_blank">📍 Directions</a>
+    <a href="../../blog.html">📰 Blog</a>
+  </nav>
+</div></header>
+
+<main class="container">
+  <article class="post">
+    <h1>Grinders: Pollen Screens</h1>
+<p>Excerpt: Grinders: Pollen Screens — quick, friendly info from Discount Smokes in Westport (Kansas City).</p>
+<h2>What to know</h2>
+<p>Here’s a simple, no-stress breakdown on <strong>Grinders — pollen screens (Westport focus; 1130 Westport Rd, Kansas City, MO). Avoid medical claims.</strong>. We keep things straightforward and locally relevant for Westport shoppers. Inventory can change day-to-day, so if you’re looking for something specific, the quickest move is to call us or stop in.</p>
+<h2>Tips before you buy</h2>
+<ul>
+<li><strong>Ask what’s new today:</strong> We get fresh items regularly, and staff can point you to current favorites.</li>
+<li><strong>Check sizes and options:</strong> Many items come in multiple sizes, styles, or variants.</li>
+<li><strong>Stay within local rules:</strong> We keep things compliant and can answer store-level questions.</li>
+<li><strong>Don’t overthink it:</strong> If you’re unsure, tell us what you like and we’ll recommend something that matches your style.</li>
+</ul>
+<h2>Westport note</h2>
+<p>If you’re already in the neighborhood, it’s easy to swing by and compare options in person. We’re located at <strong>1130 Westport Rd, Kansas City, MO 64111</strong>.</p>
+<p><strong>Visit Discount Smokes today.</strong> 21+ for nicotine purchases. Call us for current stock and availability.</p>
+  </article>
+</main>
+
+
+<section class="container" style="max-width:1080px;margin:24px auto 8px;padding:0 16px;">
+  <form id="subscribe-form" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+    <label for="sub-email" style="font-weight:600;">Subscribe for new posts:</label>
+    <input id="sub-email" type="email" required placeholder="you@example.com"
+           style="flex:1;min-width:220px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px"/>
+    <button type="submit" style="padding:10px 14px;border-radius:10px;background:#e63946;color:#fff;border:0;cursor:pointer;">
+      Subscribe
+    </button>
+    <span id="sub-msg" style="font-size:13px;color:#6b7280;"></span>
+  </form>
+  <div style='color:#ef4444;font-size:12px;margin-top:6px'>Subscribe service not configured.</div>
+</section>
+<script>
+  const SHEETBEST_URL = "";
+
+  async function subscribeHandler(e) {
+    e.preventDefault();
+    const emailEl = document.getElementById('sub-email');
+    const msg = document.getElementById('sub-msg');
+    const email = (emailEl.value || '').trim();
+
+    if (!SHEETBEST_URL) { msg.textContent='Subscribe service not configured.'; return; }
+    if (!email || !email.includes('@')) { msg.textContent='Please enter a valid email.'; return; }
+
+    msg.textContent='Saving...';
+    try {
+      const payload = { email, date: new Date().toISOString(), source: location.pathname };
+      const res = await fetch(SHEETBEST_URL, {
+        method: 'POST',
+        mode: 'cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.status >= 200 && res.status < 300) {
+        msg.textContent = 'Thank you for subscribe.';
+        emailEl.value = '';
+        return;
+      }
+
+      const txt = await res.text().catch(() => '');
+      console.error('Subscribe error:', res.status, txt);
+      msg.textContent = 'Could not subscribe. Please try again.';
+    } catch (err) {
+      console.error('Subscribe failed:', err);
+      msg.textContent = 'Could not subscribe. Please try again.';
+    }
+  }
+
+  const form = document.getElementById('subscribe-form');
+  if (form) form.addEventListener('submit', subscribeHandler);
+</script>
+
+
+<footer>© 2026 Discount Smokes. All Rights Reserved.</footer>
+</body></html>
