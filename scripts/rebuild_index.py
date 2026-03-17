@@ -356,8 +356,7 @@ def main():
     log("[env] OPENAI_API_KEY present=" + str(bool(OPENAI_API_KEY)))
     log("[env] OPENAI_MODEL=" + str(OPENAI_MODEL))
     log("[env] DRY_RUN=" + ("1" if DRY_RUN else "0"))
-    log("[env] SHEETBEST_URL configured=" + str(bool(SHEETBEST_URL)))
-
+   
     ensure_structure()
 
     try:
