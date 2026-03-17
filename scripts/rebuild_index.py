@@ -132,9 +132,7 @@ def wrap_html(title:str, excerpt:str, body_html:str)->str:
     </article>
   </main>
 
-  {subscribe_block()}
-
-  <footer>© {year} Discount Smokes. All Rights Reserved.</footer>
+ <footer>© {year} Discount Smokes. All Rights Reserved.</footer>
 </body>
 </html>"""
 
