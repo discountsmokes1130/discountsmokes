@@ -87,66 +87,6 @@ def unique_html_path(date: datetime.date, slug: str) -> pathlib.Path:
 def markdown_to_html(md_text:str)->str:
     return md.markdown(md_text, extensions=["extra"])
 
-# ====== Subscribe block (footer) ======
-def subscribe_block():
-    # Embed the Sheet.best URL into pages at build time
-    url_js = json.dumps(SHEETBEST_URL or "")
-    note = "" if SHEETBEST_URL else "<div style='color:#ef4444;font-size:12px;margin-top:6px'>Subscribe service not configured.</div>"
-    return f"""
-<section class="container" style="max-width:1080px;margin:24px auto 8px;padding:0 16px;">
-  <form id="subscribe-form" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-    <label for="sub-email" style="font-weight:600;">Subscribe for new posts:</label>
-    <input id="sub-email" type="email" required placeholder="you@example.com"
-           style="flex:1;min-width:220px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px"/>
-    <button type="submit" style="padding:10px 14px;border-radius:10px;background:#e63946;color:#fff;border:0;cursor:pointer;">
-      Subscribe
-    </button>
-    <span id="sub-msg" style="font-size:13px;color:#6b7280;"></span>
-  </form>
-  {note}
-</section>
-<script>
-  const SHEETBEST_URL = {url_js};
-
-  async function subscribeHandler(e) {{
-    e.preventDefault();
-    const emailEl = document.getElementById('sub-email');
-    const msg = document.getElementById('sub-msg');
-    const email = (emailEl.value || '').trim();
-
-    if (!SHEETBEST_URL) {{ msg.textContent='Subscribe service not configured.'; return; }}
-    if (!email || !email.includes('@')) {{ msg.textContent='Please enter a valid email.'; return; }}
-
-    msg.textContent='Saving...';
-    try {{
-      const payload = {{ email, date: new Date().toISOString(), source: location.pathname }};
-      const res = await fetch(SHEETBEST_URL, {{
-        method: 'POST',
-        mode: 'cors',
-        headers: {{ 'Content-Type': 'application/json' }},
-        body: JSON.stringify(payload)
-      }});
-
-      if (res.status >= 200 && res.status < 300) {{
-        msg.textContent = 'Thank you for subscribe.';
-        emailEl.value = '';
-        return;
-      }}
-
-      const txt = await res.text().catch(() => '');
-      console.error('Subscribe error:', res.status, txt);
-      msg.textContent = 'Could not subscribe. Please try again.';
-    }} catch (err) {{
-      console.error('Subscribe failed:', err);
-      msg.textContent = 'Could not subscribe. Please try again.';
-    }}
-  }}
-
-  const form = document.getElementById('subscribe-form');
-  if (form) form.addEventListener('submit', subscribeHandler);
-</script>
-"""
-
 # ====== HTML wrapper for generated posts (MATCHES YOUR SITE LINKS + CSS) ======
 def wrap_html(title:str, excerpt:str, body_html:str)->str:
     year = datetime.date.today().year
