@@ -54,50 +54,8 @@ jobs:
           echo "Cleaning up old posts..."
           python scripts/cleanup_old_posts.py
 
-      # Step 6: Send email to subscribers
-      - name: Email subscribers about the new post
-        continue-on-error: true
-        env:
-          SHEETBEST_URL: ${{ secrets.SHEETBEST_URL }}
-          SHEETBEST_UNSUB_URL: ${{ secrets.SHEETBEST_UNSUB_URL }}
-          UNSUBSCRIBE_SECRET: ${{ secrets.UNSUBSCRIBE_SECRET }}
-          GMAIL_USER: "1130.westport@gmail.com"
-          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-          SITE_BASE: "https://discountsmokeskc.com/"
-        run: |
-          set -e
-          echo "Sending subscriber emails..."
-          python scripts/email_subscribers.py
-
-      # Step 7: Inject Google subscription secrets into HTML (with safe escaping)
-      - name: Inject subscribe secrets into HTML
-        env:
-          SUBSCRIBE_ENDPOINT: ${{ secrets.SUBSCRIBE_ENDPOINT }}
-          GOOGLE_FORMS_ENTRY_ID: ${{ secrets.GOOGLE_FORMS_ENTRY_ID }}
-        run: |
-          set -e
-          echo "Injecting subscribe endpoint secrets into HTML files..."
-
-          # Escape values for sed replacement (escape | and & which can break s||| )
-          esc() { printf '%s' "$1" | sed -e 's/[|&]/\\&/g'; }
-
-          SE="$(esc "$SUBSCRIBE_ENDPOINT")"
-          GFEI="$(esc "$GOOGLE_FORMS_ENTRY_ID")"
-
-          # Replace placeholders in all HTML files (home, blog, and generated post pages)
-          find . -type f -name "*.html" -print0 | xargs -0 sed -i \
-            -e "s|{{SUBSCRIBE_ENDPOINT}}|$SE|g" \
-            -e "s|{{GOOGLE_FORMS_ENTRY_ID}}|$GFEI|g"
-
-          # Verify that placeholders were replaced (don’t print secrets)
-          if grep -R "{{SUBSCRIBE_ENDPOINT}}" -- *.html posts/html 2>/dev/null; then
-            echo "❌ ERROR: SUBSCRIBE_ENDPOINT placeholder still present." >&2
-            exit 1
-          else
-            echo "✅ Subscribe endpoint successfully injected."
-          fi
-
-      # Step 8: Commit & push updates to repo
+   
+      # Step 6: Commit & push updates to repo
       - name: Commit & push updates
         run: |
           set -e
