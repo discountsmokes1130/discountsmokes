@@ -173,16 +173,11 @@ def wrap_html(title:str, excerpt:str, body_html:str)->str:
 <body>
   <header>
     <div class="container header-inner">
-      <div class="brand">
-        <a href="../../index.html" aria-label="Home">
-          <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 360" role="img" aria-label="Discount Smokes logo">
-            <defs><style>.t{{font:700 90px Arial, Helvetica, sans-serif}}</style></defs>
-            <rect width="1080" height="360" fill="none"/>
-            <text x="40" y="160" class="t" fill="#e63946">DISCOUNT</text>
-            <text x="40" y="260" class="t" fill="#ffffff" fill-opacity="0.9">SMOKES</text>
-          </svg>
-          <h1 class="site-title">Discount Smokes</h1>
-        </a>
+    <div class="brand">
+      <a href="../../index.html">
+        <img src="../../assets/logo.png" alt="Discount Smokes Logo" style="height:60px;">
+      </a>
+    </div>
       </div>
 
       <div class="top-contact">
