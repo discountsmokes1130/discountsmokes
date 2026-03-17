@@ -132,7 +132,12 @@ def wrap_html(title:str, excerpt:str, body_html:str)->str:
     </article>
   </main>
 
- <footer>© {year} Discount Smokes. All Rights Reserved.</footer>
+ <footer> 
+  <p style="margin:0;">
+      Discount Smokes – Smoke shop in Kansas City offering cigarettes, vapes, kratom, hookah, cigars, gummies, grinders, glass pieces, detox products, and smoking accessories.
+    </p>
+  <p style="margin:6px 0 0;"> © {year} Discount Smokes. All Rights Reserved. </p>
+  </footer>
 </body>
 </html>"""
 
