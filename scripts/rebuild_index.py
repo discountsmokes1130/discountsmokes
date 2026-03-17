@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # Generates ONE new HTML post using posts/topics.json (rotating through topics),
 # rebuilds posts/index.json from posts/html/*.html (HTML-only),
-# and injects the footer Subscribe form (Sheet.best).
 
 import os, json, datetime, re, pathlib, textwrap, sys
 import html as html_lib
@@ -18,7 +17,6 @@ except Exception:
 OPENAI_API_KEY  = os.getenv("OPENAI_API_KEY")
 OPENAI_MODEL    = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 DRY_RUN         = os.getenv("DRY_RUN", "")
-SHEETBEST_URL   = os.getenv("SHEETBEST_URL", "").strip()  # Sheet.best subscribers endpoint
 
 ROOT       = pathlib.Path(".")
 POSTS_DIR  = ROOT / "posts"
