@@ -112,22 +112,21 @@ def wrap_html(title:str, excerpt:str, body_html:str)->str:
 </head>
 <body>
   <header>
-    <div class="container header-inner">
+  <div class="container header-inner">
     <div class="brand">
       <a href="../../index.html">
         <img src="../../assets/logo.png" alt="Discount Smokes Logo" style="height:60px;">
       </a>
     </div>
-      </div>
 
-      <div class="top-contact">
-        <a href="https://www.google.com/maps?q=1130+Westport+Rd,+Kansas+City,+MO+64111" target="_blank" class="action small">📍 Directions</a>
+    <div class="top-contact">
+      <a href="https://www.google.com/maps?q=1130+Westport+Rd,+Kansas+City,+MO+64111" target="_blank" class="action small">📍 Directions</a>
         <a href="mailto:1130.westport@gmail.com" class="action small">✉️ Contact Us</a>
         <a href="tel:+18167121130" class="action small">📞 Call Now</a>
         <a href="../../blog.html" class="action small">📰 Blog</a>
-      </div>
     </div>
-  </header>
+  </div>
+</header>
 
   <main class="container">
     <article class="post">
