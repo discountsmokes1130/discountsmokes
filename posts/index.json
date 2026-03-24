@@ -1,6 +1,13 @@
 {
   "posts": [
     {
+      "title": "Cigars & Wraps: Humidor Basics",
+      "date": "2026-03-24",
+      "url": "posts/html/2026-03-24-cigars-wraps-humidor-basics.html",
+      "excerpt": "Cigars & Wraps: Humidor Basics \u2014 helpful tips and in-store guidance from Discount Smokes in Westport (Kansas City).",
+      "category": "General"
+    },
+    {
       "title": "Hookah & Shisha: Bowl Packing Tips",
       "date": "2026-03-23",
       "url": "posts/html/2026-03-23-hookah-shisha-bowl-packing-tips.html",
@@ -284,13 +291,6 @@
       "title": "Kratom (no medical claims): Powders vs Capsules",
       "date": "2026-01-23",
       "url": "posts/html/2026-01-23-kratom-no-medical-claims-powders-vs-capsules.html",
-      "excerpt": "**",
-      "category": "General"
-    },
-    {
-      "title": "Hookah & Shisha: Starter Kits",
-      "date": "2026-01-22",
-      "url": "posts/html/2026-01-22-hookah-shisha-starter-kits.html",
       "excerpt": "**",
       "category": "General"
     }
