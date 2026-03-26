@@ -1,6 +1,13 @@
 {
   "posts": [
     {
+      "title": "Grinders: Care & Cleaning",
+      "date": "2026-03-26",
+      "url": "posts/html/2026-03-26-grinders-care-cleaning.html",
+      "excerpt": "Grinders: Care & Cleaning \u2014 helpful tips and in-store guidance from Discount Smokes in Westport (Kansas City).",
+      "category": "General"
+    },
+    {
       "title": "Cigars & Wraps: Popular Wraps",
       "date": "2026-03-25",
       "url": "posts/html/2026-03-25-cigars-wraps-popular-wraps.html",
@@ -284,13 +291,6 @@
       "title": "Vapes & Disposables: Flavor Trends",
       "date": "2026-01-25",
       "url": "posts/html/2026-01-25-vapes-disposables-flavor-trends.html",
-      "excerpt": "**",
-      "category": "General"
-    },
-    {
-      "title": "Cigars & Wraps: Popular Wraps",
-      "date": "2026-01-24",
-      "url": "posts/html/2026-01-24-cigars-wraps-popular-wraps.html",
       "excerpt": "**",
       "category": "General"
     }
