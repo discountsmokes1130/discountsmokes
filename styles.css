@@ -681,3 +681,38 @@ footer p {
     filter: blur(50px);
   }
 }
+.hours-box {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #fff, #f9fafb);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  border: 1px solid #e5e7eb;
+}
+
+.hours-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  font-size: 15px;
+}
+
+.hours-row:not(:last-child) {
+  border-bottom: 1px dashed #e5e7eb;
+}
+
+.days {
+  font-weight: 600;
+  color: #374151;
+}
+
+.time {
+  font-weight: 500;
+  color: #111827;
+}
+
+.time.highlight {
+  color: #dc2626;
+  font-weight: 600;
+}
