@@ -1,6 +1,13 @@
 {
   "posts": [
     {
+      "title": "Cigars & Wraps: Size & Shape 101",
+      "date": "2026-05-05",
+      "url": "posts/html/2026-05-05-cigars-wraps-size-shape-101.html",
+      "excerpt": "Cigars & Wraps: Size & Shape 101 \u2014 helpful tips and in-store guidance from Discount Smokes in Westport (Kansas City).",
+      "category": "General"
+    },
+    {
       "title": "Hookah & Shisha: Bowl Packing Tips",
       "date": "2026-05-04",
       "url": "posts/html/2026-05-04-hookah-shisha-bowl-packing-tips.html",
@@ -439,13 +446,6 @@
       "date": "2026-03-06",
       "url": "posts/html/2026-03-06-vapes-disposables-flavor-trends.html",
       "excerpt": "Vapes & Disposables: Flavor Trends \u2014 helpful tips and in-store guidance from Discount Smokes in Westport (Kansas City).",
-      "category": "General"
-    },
-    {
-      "title": "Smoking Accessories: Brand Roundup",
-      "date": "2026-03-05",
-      "url": "posts/html/2026-03-05-smoking-accessories-brand-roundup.html",
-      "excerpt": "Smoking Accessories: Brand Roundup \u2014 helpful tips and in-store guidance from Discount Smokes in Westport (Kansas City).",
       "category": "General"
     }
   ]
