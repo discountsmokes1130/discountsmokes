@@ -1,6 +1,13 @@
 {
   "posts": [
     {
+      "title": "Cigars & Wraps: Popular Wraps",
+      "date": "2026-07-29",
+      "url": "posts/html/2026-07-29-cigars-wraps-popular-wraps.html",
+      "excerpt": "Cigars & Wraps: Popular Wraps \u2014 helpful tips and in-store guidance from Discount Smokes in Westport (Kansas City).",
+      "category": "General"
+    },
+    {
       "title": "THC/THCa (compliance): Beginner Tips",
       "date": "2026-07-28",
       "url": "posts/html/2026-07-28-thc-thca-compliance-beginner-tips.html",
@@ -418,13 +425,6 @@
       "date": "2026-05-30",
       "url": "posts/html/2026-05-30-cigars-wraps-popular-wraps.html",
       "excerpt": "Cigars & Wraps: Popular Wraps \u2014 helpful tips and in-store guidance from Discount Smokes in Westport (Kansas City).",
-      "category": "General"
-    },
-    {
-      "title": "Smoking Accessories: Beginner Picks",
-      "date": "2026-05-29",
-      "url": "posts/html/2026-05-29-smoking-accessories-beginner-picks.html",
-      "excerpt": "Smoking Accessories: Beginner Picks \u2014 helpful tips and in-store guidance from Discount Smokes in Westport (Kansas City).",
       "category": "General"
     }
   ]
