@@ -1,6 +1,13 @@
 {
   "posts": [
     {
+      "title": "Cigars & Wraps: Starter Picks",
+      "date": "2026-09-30",
+      "url": "posts/html/2026-09-30-cigars-wraps-starter-picks.html",
+      "excerpt": "Cigars & Wraps: Starter Picks \u2014 helpful tips and in-store guidance from Discount Smokes in Westport (Kansas City).",
+      "category": "General"
+    },
+    {
       "title": "Cigars & Wraps: What\u2019s New",
       "date": "2026-09-29",
       "url": "posts/html/2026-09-29-cigars-wraps-what-s-new.html",
@@ -411,13 +418,6 @@
       "date": "2026-08-01",
       "url": "posts/html/2026-08-01-hookah-shisha-care-cleaning.html",
       "excerpt": "Hookah & Shisha: Care & Cleaning \u2014 helpful tips and in-store guidance from Discount Smokes in Westport (Kansas City).",
-      "category": "General"
-    },
-    {
-      "title": "Smoking Accessories: Pro Tips",
-      "date": "2026-07-31",
-      "url": "posts/html/2026-07-31-smoking-accessories-pro-tips.html",
-      "excerpt": "Smoking Accessories: Pro Tips \u2014 helpful tips and in-store guidance from Discount Smokes in Westport (Kansas City).",
       "category": "General"
     }
   ]
